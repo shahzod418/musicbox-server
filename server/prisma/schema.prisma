@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  ARTIST
+  MANAGER
+}
+
+enum Status {
+  REVIEW
+  DELETED
+  APPROVED
+  DECLINED
+}
+
+model User {
+  id        Int          @id @default(autoincrement())
+  email     String       @unique
+  hash      String
+  name      String?
+  role      Role         @default(USER)
+  songs     UserSong[]
+  albums    UserAlbum[]
+  artists   UserArtist[]
+  playlists Playlist[]
+  artist    Artist?
+}
+
+model UserSong {
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  song       Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId     Int
+  playlist   Playlist? @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId Int?
+
+  @@id([userId, songId])
+}
+
+model UserAlbum {
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+  album   Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  albumId Int
+
+  @@id([userId, albumId])
+}
+
+model UserArtist {
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+  artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId Int
+
+  @@id([userId, artistId])
+}
+
+model Song {
+  id       Int        @id @default(autoincrement())
+  name     String
+  text     String?
+  listens  Int        @default(0)
+  explicit Boolean    @default(false)
+  cover    String?
+  audio    String
+  status   Status     @default(REVIEW)
+  artist   Artist     @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId Int
+  album    Album?     @relation(fields: [albumId], references: [id])
+  albumId  Int?
+  users    UserSong[]
+}
+
+model Album {
+  id       Int         @id @default(autoincrement())
+  name     String
+  cover    String?
+  status   Status      @default(REVIEW)
+  songs    Song[]
+  artist   Artist      @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId Int
+  users    UserAlbum[]
+}
+
+model Artist {
+  id          Int          @id @default(autoincrement())
+  name        String
+  avatar      String?
+  cover       String?
+  description String?
+  status      Status       @default(REVIEW)
+  songs       Song[]
+  albums      Album[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int          @unique()
+  users       UserArtist[]
+}
+
+model Playlist {
+  id     Int        @id @default(autoincrement())
+  name   String
+  cover  String?
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  songs  UserSong[]
+}
