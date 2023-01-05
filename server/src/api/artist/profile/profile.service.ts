@@ -10,7 +10,7 @@ import type { Success } from '@interfaces/response';
 import type { Artist, Prisma } from '@prisma/client';
 
 @Injectable()
-export class ArtistService {
+export class ProfileService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -57,12 +57,17 @@ export class ArtistService {
     return artist;
   }
 
-  public async findOne(userId: number): Promise<Artist> {
-    return await this.prisma.artist.findFirstOrThrow({ where: { userId } });
+  public async findOne(artistId: number, userId: number): Promise<Artist> {
+    return await this.prisma.artist.findFirstOrThrow({
+      where: {
+        id: artistId,
+        userId,
+      },
+    });
   }
 
   public async update(
-    id: number,
+    artistId: number,
     data: Pick<Prisma.ArtistUpdateInput, 'name' | 'description'>,
     files: {
       avatar?: Express.Multer.File;
@@ -73,7 +78,7 @@ export class ArtistService {
 
     const { avatar: previousAvatar, cover: previousCover } =
       await this.prisma.artist.findUniqueOrThrow({
-        where: { id },
+        where: { id: artistId },
         select: {
           avatar: true,
           cover: true,
@@ -94,12 +99,12 @@ export class ArtistService {
           },
         }),
       },
-      where: { id },
+      where: { id: artistId },
     });
 
     if (avatar) {
       await this.file.updateFile(
-        id,
+        artistId,
         RoleType.Artist,
         FileType.Avatar,
         avatar,
@@ -109,7 +114,7 @@ export class ArtistService {
 
     if (cover) {
       await this.file.updateFile(
-        id,
+        artistId,
         RoleType.Artist,
         FileType.Cover,
         cover,
@@ -120,25 +125,25 @@ export class ArtistService {
     return artist;
   }
 
-  public async remove(id: number): Promise<Success> {
+  public async remove(artistId: number): Promise<Success> {
     try {
       await this.prisma.artist.update({
         data: {
           status: { set: Status.DELETED },
           albums: {
             updateMany: {
-              where: { artistId: id },
+              where: { artistId },
               data: { status: { set: Status.DELETED } },
             },
           },
           songs: {
             updateMany: {
-              where: { artistId: id },
+              where: { artistId },
               data: { status: { set: Status.DELETED } },
             },
           },
         },
-        where: { id },
+        where: { id: artistId },
       });
 
       return { success: true };

@@ -22,20 +22,20 @@ export class AlbumController {
     return await this.albumService.findAll();
   }
 
-  @Get(':id')
+  @Get(':albumId')
   public async findOne(
-    @Param('id') id: string,
+    @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<Album & { songs: Song[] }> {
-    return await this.albumService.findOne(Number(id));
+    return await this.albumService.findOne(albumId);
   }
 
-  @Get(':id/cover')
+  @Get(':albumId/cover')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getCover(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<StreamableFile> {
-    const file = await this.albumService.getCover(id);
+    const file = await this.albumService.getCover(albumId);
 
     return new StreamableFile(file);
   }

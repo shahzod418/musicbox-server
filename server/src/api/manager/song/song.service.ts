@@ -25,16 +25,16 @@ export class SongService {
     });
   }
 
-  public async findOne(id: number): Promise<Song> {
+  public async findOne(songId: number): Promise<Song> {
     return await this.prisma.song.findFirstOrThrow({
-      where: { id, status: Status.REVIEW },
+      where: { id: songId, status: Status.REVIEW },
     });
   }
 
-  public async getAudio(id: number): Promise<Buffer> {
+  public async getAudio(songId: number): Promise<Buffer> {
     const { artistId, audio } = await this.prisma.song.findFirstOrThrow({
       where: {
-        id,
+        id: songId,
         status: Status.REVIEW,
       },
       select: {
@@ -51,10 +51,10 @@ export class SongService {
     );
   }
 
-  public async getCover(id: number): Promise<Buffer> {
+  public async getCover(songId: number): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.song.findFirstOrThrow({
       where: {
-        id,
+        id: songId,
         status: Status.REVIEW,
       },
       select: { artistId: true, cover: true },
@@ -68,7 +68,7 @@ export class SongService {
     );
   }
 
-  public async approve(id: number): Promise<Success> {
+  public async approve(songId: number): Promise<Success> {
     try {
       await this.prisma.song.update({
         data: {
@@ -76,7 +76,7 @@ export class SongService {
             set: Status.APPROVED,
           },
         },
-        where: { id },
+        where: { id: songId },
       });
 
       return { success: true };
@@ -85,7 +85,7 @@ export class SongService {
     }
   }
 
-  public async decline(id: number): Promise<Success> {
+  public async decline(songId: number): Promise<Success> {
     try {
       await this.prisma.song.update({
         data: {
@@ -93,7 +93,7 @@ export class SongService {
             set: Status.DECLINED,
           },
         },
-        where: { id },
+        where: { id: songId },
       });
 
       return { success: true };
@@ -102,9 +102,15 @@ export class SongService {
     }
   }
 
-  public async updateExplicit(id: number, explicit: boolean): Promise<Success> {
+  public async updateExplicit(
+    songId: number,
+    explicit: boolean,
+  ): Promise<Success> {
     try {
-      await this.prisma.song.update({ data: { explicit }, where: { id } });
+      await this.prisma.song.update({
+        data: { explicit },
+        where: { id: songId },
+      });
 
       return { success: true };
     } catch {

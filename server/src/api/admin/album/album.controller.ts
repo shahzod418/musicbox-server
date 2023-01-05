@@ -14,8 +14,10 @@ export class AlbumController {
     return await this.albumService.findAll();
   }
 
-  @Delete(':id')
-  public async remove(@Param('id', ParseIntPipe) id: number): Promise<Success> {
-    return await this.albumService.remove(id);
+  @Delete(':albumId')
+  public async remove(
+    @Param('albumId', ParseIntPipe) albumId: number,
+  ): Promise<Success> {
+    return await this.albumService.remove(albumId);
   }
 }

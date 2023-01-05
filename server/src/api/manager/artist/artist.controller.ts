@@ -24,44 +24,46 @@ export class ArtistController {
     return await this.artistService.findAll();
   }
 
-  @Get(':id')
-  public async findOne(@Param('id', ParseIntPipe) id: number): Promise<Artist> {
-    return await this.artistService.findOne(id);
+  @Get(':artistId')
+  public async findOne(
+    @Param('artistId', ParseIntPipe) artistId: number,
+  ): Promise<Artist> {
+    return await this.artistService.findOne(artistId);
   }
 
-  @Get(':id/avatar')
+  @Get(':artistId/avatar')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getAvatar(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<StreamableFile> {
-    const file = await this.artistService.getAvatar(id);
+    const file = await this.artistService.getAvatar(artistId);
 
     return new StreamableFile(file);
   }
 
-  @Get(':id/cover')
+  @Get(':artistId/cover')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getCover(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<StreamableFile> {
-    const file = await this.artistService.getCover(id);
+    const file = await this.artistService.getCover(artistId);
 
     return new StreamableFile(file);
   }
 
-  @Patch(':id/approve')
+  @Patch(':artistId/approve')
   public async approve(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<Success> {
-    return await this.artistService.approve(id);
+    return await this.artistService.approve(artistId);
   }
 
-  @Patch(':id/decline')
+  @Patch(':artistId/decline')
   public async decline(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<Success> {
-    return await this.artistService.decline(id);
+    return await this.artistService.decline(artistId);
   }
 }

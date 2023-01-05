@@ -27,33 +27,35 @@ export class AlbumController {
     return await this.albumService.findAll(artistId);
   }
 
-  @Get(':id')
-  public async findOne(@Param('id', ParseIntPipe) id: number): Promise<Album> {
-    return await this.albumService.findOne(id);
+  @Get(':albumId')
+  public async findOne(
+    @Param('albumId', ParseIntPipe) albumId: number,
+  ): Promise<Album> {
+    return await this.albumService.findOne(albumId);
   }
 
-  @Get(':id/cover')
+  @Get(':albumId/cover')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getCover(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<StreamableFile> {
-    const file = await this.albumService.getCover(id);
+    const file = await this.albumService.getCover(albumId);
 
     return new StreamableFile(file);
   }
 
-  @Patch(':id/approve')
+  @Patch(':albumId/approve')
   public async approve(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<Success> {
-    return await this.albumService.approve(id);
+    return await this.albumService.approve(albumId);
   }
 
-  @Patch(':id/decline')
+  @Patch(':albumId/decline')
   public async decline(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<Success> {
-    return await this.albumService.decline(id);
+    return await this.albumService.decline(albumId);
   }
 }

@@ -19,10 +19,10 @@ export class AlbumService {
     return await this.prisma.album.findMany();
   }
 
-  public async remove(id: number): Promise<Success> {
+  public async remove(albumId: number): Promise<Success> {
     try {
       const { artistId, cover } = await this.prisma.album.delete({
-        where: { id },
+        where: { id: albumId },
         select: { artistId: true, cover: true },
       });
 

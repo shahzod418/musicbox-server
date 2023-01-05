@@ -19,13 +19,13 @@ export class UserService {
     return await this.prisma.user.findMany();
   }
 
-  public async updateRole(id: number, role: Role): Promise<Success> {
+  public async updateRole(userId: number, role: Role): Promise<Success> {
     try {
       await this.prisma.user.update({
         data: {
           role,
         },
-        where: { id },
+        where: { id: userId },
       });
 
       return { success: true };
@@ -34,10 +34,10 @@ export class UserService {
     }
   }
 
-  public async remove(id: number): Promise<Success> {
+  public async remove(userId: number): Promise<Success> {
     try {
       const { artist } = await this.prisma.user.delete({
-        where: { id },
+        where: { id: userId },
         include: {
           artist: true,
         },
@@ -46,7 +46,7 @@ export class UserService {
       if (artist) {
         await this.file.removeResources(artist.id, RoleType.Artist);
       }
-      await this.file.removeResources(id, RoleType.User);
+      await this.file.removeResources(userId, RoleType.User);
 
       return { success: true };
     } catch {

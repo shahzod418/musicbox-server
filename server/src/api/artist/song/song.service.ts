@@ -143,7 +143,7 @@ export class SongService {
     return song;
   }
 
-  public async remove(id: number): Promise<Success> {
+  public async remove(songId: number): Promise<Success> {
     try {
       await this.prisma.song.update({
         data: {
@@ -152,7 +152,7 @@ export class SongService {
           },
         },
         where: {
-          id,
+          id: songId,
         },
       });
 

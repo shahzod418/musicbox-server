@@ -14,8 +14,10 @@ export class ArtistController {
     return await this.artistService.findAll();
   }
 
-  @Delete(':id')
-  public async remove(@Param('id', ParseIntPipe) id: number): Promise<Success> {
-    return await this.artistService.remove(id);
+  @Delete(':artistId')
+  public async remove(
+    @Param('artistId', ParseIntPipe) artistId: number,
+  ): Promise<Success> {
+    return await this.artistService.remove(artistId);
   }
 }

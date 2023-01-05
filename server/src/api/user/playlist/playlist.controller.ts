@@ -70,7 +70,7 @@ export class PlaylistController {
     @Param('songId', ParseIntPipe) songId: number,
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<Playlist> {
-    return await this.playlistService.addSong(userId, playlistId, songId);
+    return await this.playlistService.addSong(playlistId, userId, songId);
   }
 
   @Delete(':playlistId/:songId')
@@ -79,6 +79,6 @@ export class PlaylistController {
     @Param('songId', ParseIntPipe) songId: number,
     @Query('userId', ParseIntPipe) userId: number,
   ): Promise<Playlist> {
-    return await this.playlistService.deleteSong(userId, playlistId, songId);
+    return await this.playlistService.deleteSong(playlistId, userId, songId);
   }
 }

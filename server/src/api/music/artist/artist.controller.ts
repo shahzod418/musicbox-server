@@ -22,31 +22,31 @@ export class ArtistController {
     return await this.artistService.findAll();
   }
 
-  @Get(':id')
+  @Get(':artistId')
   public async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<Artist & { songs: Song[]; albums: Album[] }> {
-    return await this.artistService.findOne(Number(id));
+    return await this.artistService.findOne(artistId);
   }
 
-  @Get(':id/avatar')
+  @Get(':artistId/avatar')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getAvatar(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<StreamableFile> {
-    const file = await this.artistService.getAvatar(id);
+    const file = await this.artistService.getAvatar(artistId);
 
     return new StreamableFile(file);
   }
 
-  @Get(':id/cover')
+  @Get(':artistId/cover')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getCover(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<StreamableFile> {
-    const file = await this.artistService.getCover(id);
+    const file = await this.artistService.getCover(artistId);
 
     return new StreamableFile(file);
   }

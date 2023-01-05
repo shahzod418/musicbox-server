@@ -22,42 +22,47 @@ export class ArtistService {
     });
   }
 
-  public async findOne(id: number): Promise<Artist> {
+  public async findOne(artistId: number): Promise<Artist> {
     return await this.prisma.artist.findFirstOrThrow({
-      where: { id, status: Status.REVIEW },
+      where: { id: artistId, status: Status.REVIEW },
     });
   }
 
-  public async getAvatar(id: number): Promise<Buffer> {
+  public async getAvatar(artistId: number): Promise<Buffer> {
     const { avatar } = await this.prisma.artist.findFirstOrThrow({
       where: {
-        id,
+        id: artistId,
         status: Status.REVIEW,
       },
       select: { avatar: true },
     });
 
     return await this.file.getFile(
-      id,
+      artistId,
       RoleType.Artist,
       FileType.Avatar,
       avatar,
     );
   }
 
-  public async getCover(id: number): Promise<Buffer> {
+  public async getCover(artistId: number): Promise<Buffer> {
     const { cover } = await this.prisma.artist.findFirstOrThrow({
       where: {
-        id,
+        id: artistId,
         status: Status.REVIEW,
       },
       select: { cover: true },
     });
 
-    return await this.file.getFile(id, RoleType.Artist, FileType.Cover, cover);
+    return await this.file.getFile(
+      artistId,
+      RoleType.Artist,
+      FileType.Cover,
+      cover,
+    );
   }
 
-  public async approve(id: number): Promise<Success> {
+  public async approve(artistId: number): Promise<Success> {
     try {
       await this.prisma.artist.update({
         data: {
@@ -70,7 +75,7 @@ export class ArtistService {
             },
           },
         },
-        where: { id },
+        where: { id: artistId },
       });
 
       return { success: true };
@@ -79,7 +84,7 @@ export class ArtistService {
     }
   }
 
-  public async decline(id: number): Promise<Success> {
+  public async decline(artistId: number): Promise<Success> {
     try {
       await this.prisma.artist.update({
         data: {
@@ -94,7 +99,7 @@ export class ArtistService {
                 },
               },
               where: {
-                artistId: id,
+                artistId,
               },
             },
           },
@@ -106,12 +111,12 @@ export class ArtistService {
                 },
               },
               where: {
-                artistId: id,
+                artistId,
               },
             },
           },
         },
-        where: { id },
+        where: { id: artistId },
       });
 
       return { success: true };

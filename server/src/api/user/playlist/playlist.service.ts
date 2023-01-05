@@ -94,8 +94,8 @@ export class PlaylistService {
   }
 
   public async addSong(
-    userId: number,
     playlistId: number,
+    userId: number,
     songId: number,
   ): Promise<Playlist> {
     return await this.prisma.playlist.update({
@@ -116,8 +116,8 @@ export class PlaylistService {
   }
 
   public async deleteSong(
-    userId: number,
     playlistId: number,
+    userId: number,
     songId: number,
   ): Promise<Playlist> {
     return await this.prisma.playlist.update({

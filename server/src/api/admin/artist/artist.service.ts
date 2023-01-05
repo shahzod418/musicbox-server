@@ -19,11 +19,11 @@ export class ArtistService {
     return this.prisma.artist.findMany();
   }
 
-  public async remove(id: number): Promise<Success> {
+  public async remove(artistId: number): Promise<Success> {
     try {
-      await this.prisma.artist.delete({ where: { id } });
+      await this.prisma.artist.delete({ where: { id: artistId } });
 
-      await this.file.removeResources(id, RoleType.Artist);
+      await this.file.removeResources(artistId, RoleType.Artist);
 
       return { success: true };
     } catch {

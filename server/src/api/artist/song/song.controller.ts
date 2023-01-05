@@ -52,12 +52,15 @@ export class SongController {
     return await this.songService.findAll(artistId);
   }
 
-  @Get(':id')
-  public async findOne(@Param('id', ParseIntPipe) id: number): Promise<Song> {
-    return await this.songService.findOne(id);
+  @Get(':songId')
+  public async findOne(
+    @Param('songId', ParseIntPipe) songId: number,
+    @Query('artistId', ParseIntPipe) artistId: number,
+  ): Promise<Song> {
+    return await this.songService.findOne(songId, artistId);
   }
 
-  @Patch(':id')
+  @Patch(':songId')
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'audio', maxCount: 1 },
@@ -65,18 +68,21 @@ export class SongController {
     ]),
   )
   public async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
+    @Query('artistId', ParseIntPipe) artistId: number,
     @Body() data: ISongUpdateInput,
     @UploadedFiles() files: ISongUpdateFiles,
   ): Promise<Song> {
-    return await this.songService.update(id, data, {
+    return await this.songService.update(songId, artistId, data, {
       audio: files?.audio?.at(0),
       cover: files?.cover?.at(0),
     });
   }
 
-  @Delete(':id')
-  public async remove(@Param('id', ParseIntPipe) id: number): Promise<Success> {
-    return await this.songService.remove(id);
+  @Delete(':songId')
+  public async remove(
+    @Param('songId', ParseIntPipe) songId: number,
+  ): Promise<Success> {
+    return await this.songService.remove(songId);
   }
 }

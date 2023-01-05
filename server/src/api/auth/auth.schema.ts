@@ -6,9 +6,9 @@ import {
   MinLength,
 } from 'class-validator';
 
-import type { Prisma } from '@prisma/client';
+import type { Prisma, User } from '@prisma/client';
 
-export class UserCreateInput
+export class UserSignUp
   implements Pick<Prisma.UserCreateInput, 'email' | 'name'>
 {
   @IsEmail()
@@ -19,6 +19,15 @@ export class UserCreateInput
   @MaxLength(30)
   @IsOptional()
   name?: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+}
+
+export class UserSignIn implements Pick<User, 'email'> {
+  @IsEmail()
+  email: string;
 
   @IsString()
   @MinLength(8)

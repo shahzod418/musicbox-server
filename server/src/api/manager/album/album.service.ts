@@ -25,25 +25,33 @@ export class AlbumService {
     });
   }
 
-  public async findOne(id: number): Promise<Album> {
+  public async findOne(albumId: number): Promise<Album> {
     return await this.prisma.album.findFirstOrThrow({
-      where: { id, status: Status.REVIEW },
+      where: {
+        id: albumId,
+        status: Status.REVIEW,
+      },
     });
   }
 
-  public async getCover(id: number): Promise<Buffer> {
+  public async getCover(albumId: number): Promise<Buffer> {
     const { cover } = await this.prisma.album.findFirstOrThrow({
       where: {
-        id,
+        id: albumId,
         status: Status.REVIEW,
       },
       select: { cover: true },
     });
 
-    return await this.file.getFile(id, RoleType.Artist, FileType.Cover, cover);
+    return await this.file.getFile(
+      albumId,
+      RoleType.Artist,
+      FileType.Cover,
+      cover,
+    );
   }
 
-  public async approve(id: number): Promise<Success> {
+  public async approve(albumId: number): Promise<Success> {
     try {
       await this.prisma.album.update({
         data: {
@@ -51,7 +59,7 @@ export class AlbumService {
             set: Status.APPROVED,
           },
         },
-        where: { id },
+        where: { id: albumId },
       });
 
       return { success: true };
@@ -60,7 +68,7 @@ export class AlbumService {
     }
   }
 
-  public async decline(id: number): Promise<Success> {
+  public async decline(albumId: number): Promise<Success> {
     try {
       await this.prisma.album.update({
         data: {
@@ -75,12 +83,12 @@ export class AlbumService {
                 },
               },
               where: {
-                artistId: id,
+                albumId,
               },
             },
           },
         },
-        where: { id },
+        where: { id: albumId },
       });
 
       return { success: true };

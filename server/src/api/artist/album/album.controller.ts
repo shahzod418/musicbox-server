@@ -39,24 +39,29 @@ export class AlbumController {
     return await this.albumService.findAll(artistId);
   }
 
-  @Get(':id')
-  public async findOne(@Param('id', ParseIntPipe) id: number): Promise<IAlbum> {
-    return await this.albumService.findOne(id);
+  @Get(':albumId')
+  public async findOne(
+    @Param('albumId', ParseIntPipe) albumId: number,
+    @Query('artistId', ParseIntPipe) artistId: number,
+  ): Promise<IAlbum> {
+    return await this.albumService.findOne(albumId, artistId);
   }
 
-  @Patch(':id')
+  @Patch(':albumId')
   @UseInterceptors(FileInterceptor('cover'))
   public async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('albumId', ParseIntPipe) albumId: number,
     @Body() data: IAlbumUpdateInput,
     @UploadedFile() cover?: Express.Multer.File,
   ): Promise<IAlbum> {
-    return await this.albumService.update(id, data, cover);
+    return await this.albumService.update(albumId, data, cover);
   }
 
-  @Delete(':id')
-  public async remove(@Param('id', ParseIntPipe) id: number): Promise<Success> {
-    return await this.albumService.remove(id);
+  @Delete(':albumId')
+  public async remove(
+    @Param('albumId', ParseIntPipe) albumId: number,
+  ): Promise<Success> {
+    return await this.albumService.remove(albumId);
   }
 
   @Patch(':albumId/:songId')

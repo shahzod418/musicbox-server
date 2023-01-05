@@ -21,19 +21,19 @@ export class SongService {
     });
   }
 
-  public async findOne(id: number): Promise<Song> {
+  public async findOne(songId: number): Promise<Song> {
     return await this.prisma.song.findFirstOrThrow({
       where: {
-        id,
+        id: songId,
         OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
       },
     });
   }
 
-  public async getAudio(id: number): Promise<Buffer> {
+  public async getAudio(songId: number): Promise<Buffer> {
     const { artistId, audio } = await this.prisma.song.findFirstOrThrow({
       where: {
-        id,
+        id: songId,
         OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
       },
       select: {
@@ -50,10 +50,10 @@ export class SongService {
     );
   }
 
-  public async getCover(id: number): Promise<Buffer> {
+  public async getCover(songId: number): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.song.findFirstOrThrow({
       where: {
-        id,
+        id: songId,
         OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
       },
       select: { artistId: true, cover: true },
@@ -67,14 +67,14 @@ export class SongService {
     );
   }
 
-  public async addListens(id: number): Promise<void> {
+  public async addListens(songId: number): Promise<void> {
     await this.prisma.song.update({
       data: {
         listens: {
           increment: 1,
         },
       },
-      where: { id },
+      where: { id: songId },
     });
   }
 }

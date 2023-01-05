@@ -54,7 +54,7 @@ export class AlbumService {
   }
 
   public async update(
-    id: number,
+    albumId: number,
     data: Pick<Prisma.AlbumUpdateInput, 'name'>,
     cover?: Express.Multer.File,
   ): Promise<Album> {
@@ -70,7 +70,9 @@ export class AlbumService {
           set: Status.REVIEW,
         },
       },
-      where: { id },
+      where: {
+        id: albumId,
+      },
     });
 
     if (cover) {
@@ -91,7 +93,7 @@ export class AlbumService {
     return album;
   }
 
-  public async remove(id: number): Promise<Success> {
+  public async remove(albumId: number): Promise<Success> {
     try {
       await this.prisma.album.update({
         data: {
@@ -100,7 +102,7 @@ export class AlbumService {
           },
         },
         where: {
-          id,
+          id: albumId,
         },
       });
 

@@ -23,16 +23,18 @@ export class UserController {
     return await this.userService.findAll();
   }
 
-  @Patch(':id/:role')
+  @Patch(':userId/:role')
   public async updateRole(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
     @Param('role', ParseEnumPipe) role: Role,
   ): Promise<Success> {
-    return await this.userService.updateRole(id, role);
+    return await this.userService.updateRole(userId, role);
   }
 
-  @Delete(':id')
-  public async remove(@Param('id', ParseIntPipe) id: number): Promise<Success> {
-    return await this.userService.remove(id);
+  @Delete(':userId')
+  public async remove(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<Success> {
+    return await this.userService.remove(userId);
   }
 }

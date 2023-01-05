@@ -23,37 +23,39 @@ export class SongController {
     return await this.songService.findAll();
   }
 
-  @Get(':id')
-  public async findOne(@Param('id', ParseIntPipe) id: number): Promise<Song> {
-    return await this.songService.findOne(id);
+  @Get(':songId')
+  public async findOne(
+    @Param('songId', ParseIntPipe) songId: number,
+  ): Promise<Song> {
+    return await this.songService.findOne(songId);
   }
 
-  @Get(':id/audio')
+  @Get(':songId/audio')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'audio/mpeg')
   public async getAudio(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
   ): Promise<StreamableFile> {
-    const file = await this.songService.getAudio(id);
+    const file = await this.songService.getAudio(songId);
 
     return new StreamableFile(file);
   }
 
-  @Get(':id/cover')
+  @Get(':songId/cover')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getCover(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
   ): Promise<StreamableFile> {
-    const file = await this.songService.getCover(id);
+    const file = await this.songService.getCover(songId);
 
     return new StreamableFile(file);
   }
 
-  @Patch(':id/listens')
+  @Patch(':songId/listens')
   public async addListens(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
   ): Promise<void> {
-    return await this.songService.addListens(id);
+    return await this.songService.addListens(songId);
   }
 }

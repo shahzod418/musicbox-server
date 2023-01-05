@@ -14,8 +14,10 @@ export class SongController {
     return await this.songService.findAll();
   }
 
-  @Delete(':id')
-  public async remove(@Param('id', ParseIntPipe) id: number): Promise<Success> {
-    return await this.songService.remove(id);
+  @Delete(':songId')
+  public async remove(
+    @Param('songId', ParseIntPipe) songId: number,
+  ): Promise<Success> {
+    return await this.songService.remove(songId);
   }
 }

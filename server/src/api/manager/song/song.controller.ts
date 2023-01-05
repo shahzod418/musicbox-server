@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Query,
@@ -15,7 +16,6 @@ import {
 import type { Success } from '@interfaces/response';
 import type { Song } from '@prisma/client';
 
-import { ISongUpdateExplicitInput } from './song.schema';
 import { SongService } from './song.service';
 
 @Controller('api/manager/songs')
@@ -29,52 +29,54 @@ export class AlbumController {
     return await this.songService.findAll(artistId);
   }
 
-  @Get(':id')
-  public async findOne(@Param('id', ParseIntPipe) id: number): Promise<Song> {
-    return await this.songService.findOne(id);
+  @Get(':songId')
+  public async findOne(
+    @Param('songId', ParseIntPipe) songId: number,
+  ): Promise<Song> {
+    return await this.songService.findOne(songId);
   }
 
-  @Get(':id/audio')
+  @Get(':songId/audio')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'audio/mpeg')
   public async getAudio(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
   ): Promise<StreamableFile> {
-    const file = await this.songService.getAudio(id);
+    const file = await this.songService.getAudio(songId);
 
     return new StreamableFile(file);
   }
 
-  @Get(':id/cover')
+  @Get(':songId/cover')
   @HttpCode(HttpStatus.PARTIAL_CONTENT)
   @Header('Content-Type', 'image/jpeg')
   public async getCover(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
   ): Promise<StreamableFile> {
-    const file = await this.songService.getCover(id);
+    const file = await this.songService.getCover(songId);
 
     return new StreamableFile(file);
   }
 
-  @Patch(':id/approve')
+  @Patch(':songId/approve')
   public async approve(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
   ): Promise<Success> {
-    return await this.songService.approve(id);
+    return await this.songService.approve(songId);
   }
 
-  @Patch(':id/decline')
+  @Patch(':songId/decline')
   public async decline(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('songId', ParseIntPipe) songId: number,
   ): Promise<Success> {
-    return await this.songService.decline(id);
+    return await this.songService.decline(songId);
   }
 
-  @Patch(':id/explicit')
+  @Patch(':songId/explicit')
   public async updateExplicit(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() data: ISongUpdateExplicitInput,
+    @Param('songId', ParseIntPipe) songId: number,
+    @Body('explicit', ParseBoolPipe) explicit: boolean,
   ): Promise<Success> {
-    return await this.songService.updateExplicit(id, data.explicit);
+    return await this.songService.updateExplicit(songId, explicit);
   }
 }

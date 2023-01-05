@@ -23,10 +23,10 @@ export class AlbumService {
     });
   }
 
-  public async findOne(id: number): Promise<Album & { songs: Song[] }> {
+  public async findOne(albumId: number): Promise<Album & { songs: Song[] }> {
     return await this.prisma.album.findFirstOrThrow({
       where: {
-        id,
+        id: albumId,
         OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
       },
       include: {
@@ -35,15 +35,20 @@ export class AlbumService {
     });
   }
 
-  public async getCover(id: number): Promise<Buffer> {
+  public async getCover(albumId: number): Promise<Buffer> {
     const { cover } = await this.prisma.album.findFirstOrThrow({
       where: {
-        id,
+        id: albumId,
         OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
       },
       select: { cover: true },
     });
 
-    return await this.file.getFile(id, RoleType.Artist, FileType.Cover, cover);
+    return await this.file.getFile(
+      albumId,
+      RoleType.Artist,
+      FileType.Cover,
+      cover,
+    );
   }
 }
