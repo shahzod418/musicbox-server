@@ -2,19 +2,19 @@ import { Test } from '@nestjs/testing';
 
 import type { TestingModule } from '@nestjs/testing';
 
-import { AlbumController } from './album.controller';
-import { AlbumService } from './album.service';
+import { ManagerAlbumController } from './album.controller';
+import { ManagerAlbumService } from './album.service';
 
-describe('AlbumController', () => {
-  let controller: AlbumController;
+describe('ManagerAlbumController', () => {
+  let controller: ManagerAlbumController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AlbumController],
-      providers: [AlbumService],
+      controllers: [ManagerAlbumController],
+      providers: [ManagerAlbumService],
     }).compile();
 
-    controller = module.get<AlbumController>(AlbumController);
+    controller = module.get<ManagerAlbumController>(ManagerAlbumController);
   });
 
   it('should be defined', () => {

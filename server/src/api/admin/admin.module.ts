@@ -1,11 +1,16 @@
 import { Module } from '@nestjs/common';
 
-import { AlbumModule } from './album/album.module';
-import { ArtistModule } from './artist/artist.module';
-import { SongModule } from './song/song.module';
-import { UserModule } from './user/user.module';
+import { AdminAlbumModule } from './album/album.module';
+import { AdminArtistModule } from './artist/artist.module';
+import { AdminSongModule } from './song/song.module';
+import { AdminUserModule } from './user/user.module';
 
 @Module({
-  imports: [AlbumModule, ArtistModule, SongModule, UserModule],
+  imports: [
+    AdminAlbumModule,
+    AdminArtistModule,
+    AdminSongModule,
+    AdminUserModule,
+  ],
 })
 export class AdminModule {}

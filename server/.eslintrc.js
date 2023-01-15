@@ -51,7 +51,14 @@ module.exports = {
           {
             pattern: '@guards/**',
             group: 'parent',
-            position: 'after',
+          },
+          {
+            pattern: '@pipes/**',
+            group: 'parent',
+          },
+          {
+            pattern: '@errors/**',
+            group: 'parent',
           },
           {
             pattern: '@interfaces/**',
@@ -98,8 +105,12 @@ module.exports = {
     '@typescript-eslint/naming-convention': [
       'error',
       {
-        selector: 'interface',
+        selector: ['interface', 'typeAlias'],
         format: ['PascalCase'],
+        custom: {
+          regex: '^I[A-Z]',
+          match: true,
+        },
       },
     ],
     '@typescript-eslint/array-type': ['error', { default: 'array' }],

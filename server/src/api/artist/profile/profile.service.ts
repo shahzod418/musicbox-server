@@ -6,25 +6,25 @@ import { FileService } from '@services/file/file.service';
 
 import { FileType, RoleType } from '@interfaces/file';
 
-import type { Success } from '@interfaces/response';
-import type { Artist, Prisma } from '@prisma/client';
+import type {
+  IArtist,
+  IArtistFiles,
+  ICreateArtist,
+  IUpdateArtist,
+} from './profile.interface';
+import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class ProfileService {
+export class ArtistProfileService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
   ) {}
 
   public async create(
-    data: Pick<Prisma.ArtistCreateInput, 'name' | 'description'> & {
-      userId: number;
-    },
-    files: {
-      avatar?: Express.Multer.File;
-      cover?: Express.Multer.File;
-    },
-  ): Promise<Artist> {
+    data: ICreateArtist,
+    files: IArtistFiles,
+  ): Promise<IArtist> {
     const { userId, ...payload } = data;
     const { avatar, cover } = files;
 
@@ -34,6 +34,14 @@ export class ProfileService {
         userId,
         ...(avatar && { avatar: avatar.originalname }),
         ...(cover && { cover: cover.originalname }),
+      },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        cover: true,
+        description: true,
+        status: true,
       },
     });
 
@@ -57,23 +65,28 @@ export class ProfileService {
     return artist;
   }
 
-  public async findOne(artistId: number, userId: number): Promise<Artist> {
+  public async findOne(artistId: number, userId: number): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
       where: {
         id: artistId,
         userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        cover: true,
+        description: true,
+        status: true,
       },
     });
   }
 
   public async update(
     artistId: number,
-    data: Pick<Prisma.ArtistUpdateInput, 'name' | 'description'>,
-    files: {
-      avatar?: Express.Multer.File;
-      cover?: Express.Multer.File;
-    },
-  ): Promise<Artist> {
+    data: IUpdateArtist,
+    files: IArtistFiles,
+  ): Promise<IArtist> {
     const { avatar, cover } = files;
 
     const { avatar: previousAvatar, cover: previousCover } =
@@ -100,6 +113,14 @@ export class ProfileService {
         }),
       },
       where: { id: artistId },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        cover: true,
+        description: true,
+        status: true,
+      },
     });
 
     if (avatar) {
@@ -125,64 +146,26 @@ export class ProfileService {
     return artist;
   }
 
-  public async remove(artistId: number): Promise<Success> {
-    try {
-      await this.prisma.artist.update({
-        data: {
-          status: { set: Status.DELETED },
-          albums: {
-            updateMany: {
-              where: { artistId },
-              data: { status: { set: Status.DELETED } },
-            },
-          },
-          songs: {
-            updateMany: {
-              where: { artistId },
-              data: { status: { set: Status.DELETED } },
-            },
+  public async remove(artistId: number): Promise<ISuccess> {
+    await this.prisma.artist.update({
+      data: {
+        status: { set: Status.DELETED },
+        albums: {
+          updateMany: {
+            where: { artistId },
+            data: { status: { set: Status.DELETED } },
           },
         },
-        where: { id: artistId },
-      });
-
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
-  }
-
-  public async getAvatar(artistId: number, userId: number): Promise<Buffer> {
-    const { avatar } = await this.prisma.artist.findFirstOrThrow({
-      where: {
-        id: artistId,
-        userId,
+        songs: {
+          updateMany: {
+            where: { artistId },
+            data: { status: { set: Status.DELETED } },
+          },
+        },
       },
-      select: { avatar: true },
+      where: { id: artistId },
     });
 
-    return await this.file.getFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Avatar,
-      avatar,
-    );
-  }
-
-  public async getCover(artistId: number, userId: number): Promise<Buffer> {
-    const { cover } = await this.prisma.artist.findFirstOrThrow({
-      where: {
-        id: artistId,
-        userId,
-      },
-      select: { cover: true },
-    });
-
-    return await this.file.getFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Cover,
-      cover,
-    );
+    return { success: true };
   }
 }

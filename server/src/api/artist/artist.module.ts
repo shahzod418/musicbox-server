@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { AlbumModule } from './album/album.module';
-import { ProfileModule } from './profile/profile.module';
-import { SongModule } from './song/song.module';
+import { ArtistAlbumModule } from './album/album.module';
+import { ArtistProfileModule } from './profile/profile.module';
+import { ArtistSongModule } from './song/song.module';
 
 @Module({
-  imports: [AlbumModule, ProfileModule, SongModule],
+  imports: [ArtistAlbumModule, ArtistProfileModule, ArtistSongModule],
 })
 export class ArtistModule {}

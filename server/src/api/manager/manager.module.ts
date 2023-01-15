@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { AlbumModule } from './album/album.module';
-import { ArtistModule } from './artist/artist.module';
+import { ManagerAlbumModule } from './album/album.module';
+import { ManagerArtistModule } from './artist/artist.module';
+import { ManagerSongModule } from './song/song.module';
 
 @Module({
-  imports: [AlbumModule, ArtistModule],
+  imports: [ManagerAlbumModule, ManagerArtistModule, ManagerSongModule],
 })
 export class ManagerModule {}

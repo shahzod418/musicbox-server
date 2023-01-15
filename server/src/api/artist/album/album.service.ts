@@ -6,22 +6,25 @@ import { FileService } from '@services/file/file.service';
 
 import { FileType, RoleType } from '@interfaces/file';
 
-import type { Success } from '@interfaces/response';
-import type { Album, Prisma } from '@prisma/client';
+import type {
+  IAlbum,
+  ICreateAlbum,
+  ISong,
+  IUpdateAlbum,
+} from './album.interface';
+import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class AlbumService {
+export class ArtistAlbumService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
   ) {}
 
   public async create(
-    data: Pick<Prisma.AlbumCreateInput, 'name'> & {
-      artistId: number;
-    },
+    data: ICreateAlbum,
     cover?: Express.Multer.File,
-  ): Promise<Album> {
+  ): Promise<IAlbum> {
     const { artistId, ...payload } = data;
 
     const album = await this.prisma.album.create({
@@ -34,6 +37,12 @@ export class AlbumService {
           },
         },
       },
+      select: {
+        id: true,
+        name: true,
+        cover: true,
+        status: true,
+      },
     });
 
     if (cover) {
@@ -43,21 +52,53 @@ export class AlbumService {
     return album;
   }
 
-  public async findAll(artistId: number): Promise<Album[]> {
-    return await this.prisma.album.findMany({ where: { artistId } });
+  public async findAll(artistId: number): Promise<IAlbum[]> {
+    return await this.prisma.album.findMany({
+      where: { artistId },
+      select: {
+        id: true,
+        name: true,
+        cover: true,
+        status: true,
+      },
+    });
   }
 
-  public async findOne(albumId: number, artistId: number): Promise<Album> {
+  public async findOne(
+    albumId: number,
+    artistId: number,
+  ): Promise<IAlbum & ISong> {
     return await this.prisma.album.findFirstOrThrow({
       where: { id: albumId, artistId },
+      select: {
+        id: true,
+        name: true,
+        cover: true,
+        status: true,
+        songs: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
   }
 
   public async update(
     albumId: number,
-    data: Pick<Prisma.AlbumUpdateInput, 'name'>,
+    data: IUpdateAlbum,
     cover?: Express.Multer.File,
-  ): Promise<Album> {
+  ): Promise<IAlbum> {
+    const { artistId, cover: previousCover } =
+      await this.prisma.album.findFirstOrThrow({
+        where: { id: albumId },
+        select: {
+          artistId: true,
+          cover: true,
+        },
+      });
+
     const album = await this.prisma.album.update({
       data: {
         ...data,
@@ -73,84 +114,73 @@ export class AlbumService {
       where: {
         id: albumId,
       },
+      select: {
+        id: true,
+        name: true,
+        cover: true,
+        status: true,
+      },
     });
 
     if (cover) {
-      await this.file.addFile(
-        album.artistId,
+      await this.file.updateFile(
+        artistId,
         RoleType.Artist,
         FileType.Cover,
         cover,
-      );
-      await this.file.removeFile(
-        album.artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        album.cover,
+        previousCover,
       );
     }
 
     return album;
   }
 
-  public async remove(albumId: number): Promise<Success> {
-    try {
-      await this.prisma.album.update({
-        data: {
-          status: {
-            set: Status.DELETED,
-          },
+  public async remove(albumId: number): Promise<ISuccess> {
+    await this.prisma.album.update({
+      data: {
+        status: {
+          set: Status.DELETED,
         },
-        where: {
-          id: albumId,
-        },
-      });
+      },
+      where: {
+        id: albumId,
+      },
+    });
 
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
+    return { success: true };
   }
 
-  public async addSong(albumId: number, songId: number): Promise<Success> {
-    try {
-      await this.prisma.album.update({
-        data: {
-          songs: {
-            connect: {
-              id: songId,
-            },
+  public async addSong(albumId: number, songId: number): Promise<ISuccess> {
+    await this.prisma.album.update({
+      data: {
+        songs: {
+          connect: {
+            id: songId,
           },
         },
-        where: {
-          id: albumId,
-        },
-      });
+      },
+      where: {
+        id: albumId,
+      },
+    });
 
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
+    return { success: true };
   }
 
-  public async removeSong(albumId: number, songId: number): Promise<Success> {
-    try {
-      await this.prisma.album.update({
-        data: {
-          songs: {
-            disconnect: {
-              id: songId,
-            },
+  public async removeSong(albumId: number, songId: number): Promise<ISuccess> {
+    await this.prisma.album.update({
+      data: {
+        songs: {
+          disconnect: {
+            id: songId,
           },
         },
-        where: {
-          id: albumId,
-        },
-      });
+      },
+      where: {
+        id: albumId,
+      },
+    });
 
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
+    return { success: true };
   }
 }

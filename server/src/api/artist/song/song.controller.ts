@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,20 +14,27 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
-import type { Success } from '@interfaces/response';
-import type { Song } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
+import { AudioValidationPipe } from '@pipes/audio-validation';
+import { BodyValidationPipe } from '@pipes/body-validation';
+import { CoverValidationPipe } from '@pipes/cover-validation';
+
+import type { ISong } from './song.interface';
+import type { ISuccess } from '@interfaces/response';
 
 import {
-  ISongCreateFiles,
-  ISongCreateInput,
-  ISongUpdateFiles,
-  ISongUpdateInput,
-} from './song.schema';
-import { SongService } from './song.service';
+  ICreateSong,
+  ICreateSongFiles,
+  IUpdateSong,
+  IUpdateSongFiles,
+} from './song.interface';
+
+import { ArtistSongService } from './song.service';
+import { createSongSchema, updateSongSchema } from './song.validation';
 
 @Controller('api/artist/songs')
-export class SongController {
-  constructor(private readonly songService: SongService) {}
+export class ArtistSongController {
+  constructor(private readonly artistSongService: ArtistSongService) {}
 
   @Post()
   @UseInterceptors(
@@ -36,28 +44,54 @@ export class SongController {
     ]),
   )
   public async create(
-    @Body() data: ISongCreateInput,
-    @UploadedFiles() files: ISongCreateFiles,
-  ): Promise<Song> {
-    return await this.songService.create(data, {
-      audio: files.audio.at(0),
-      cover: files?.cover?.at(0),
-    });
+    @Body(new BodyValidationPipe<ICreateSong>(createSongSchema))
+    data: ICreateSong,
+    @UploadedFiles(
+      new AudioValidationPipe(),
+      new CoverValidationPipe({ optional: true }),
+    )
+    files: ICreateSongFiles,
+  ): Promise<ISong> {
+    try {
+      return await this.artistSongService.create(data, files);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Get()
   public async findAll(
     @Query('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Song[]> {
-    return await this.songService.findAll(artistId);
+  ): Promise<ISong[]> {
+    try {
+      return await this.artistSongService.findAll(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Get(':songId')
   public async findOne(
     @Param('songId', ParseIntPipe) songId: number,
     @Query('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Song> {
-    return await this.songService.findOne(songId, artistId);
+  ): Promise<ISong> {
+    try {
+      return await this.artistSongService.findOne(songId, artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Patch(':songId')
@@ -70,19 +104,37 @@ export class SongController {
   public async update(
     @Param('songId', ParseIntPipe) songId: number,
     @Query('artistId', ParseIntPipe) artistId: number,
-    @Body() data: ISongUpdateInput,
-    @UploadedFiles() files: ISongUpdateFiles,
-  ): Promise<Song> {
-    return await this.songService.update(songId, artistId, data, {
-      audio: files?.audio?.at(0),
-      cover: files?.cover?.at(0),
-    });
+    @Body(new BodyValidationPipe<IUpdateSong>(updateSongSchema))
+    data: IUpdateSong,
+    @UploadedFiles(
+      new AudioValidationPipe({ optional: true }),
+      new CoverValidationPipe({ optional: true }),
+    )
+    files: IUpdateSongFiles,
+  ): Promise<ISong> {
+    try {
+      return await this.artistSongService.update(songId, artistId, data, files);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Delete(':songId')
   public async remove(
     @Param('songId', ParseIntPipe) songId: number,
-  ): Promise<Success> {
-    return await this.songService.remove(songId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.artistSongService.remove(songId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 }

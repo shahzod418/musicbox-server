@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 
-import { SongController } from './song.controller';
-import { SongService } from './song.service';
+import { PrismaModule } from '@database/prisma.module';
+import { ServicesModule } from '@services/services.module';
+
+import { ArtistSongController } from './song.controller';
+import { ArtistSongService } from './song.service';
 
 @Module({
-  controllers: [SongController],
-  providers: [SongService],
+  controllers: [ArtistSongController],
+  providers: [ArtistSongService],
+  imports: [PrismaModule, ServicesModule],
 })
-export class SongModule {}
+export class ArtistSongModule {}

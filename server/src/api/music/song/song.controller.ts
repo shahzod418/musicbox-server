@@ -1,61 +1,62 @@
 import {
+  BadRequestException,
   Controller,
   Get,
-  Header,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
-  StreamableFile,
 } from '@nestjs/common';
 
-import type { Song } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
 
-import { SongService } from './song.service';
+import type { ISong } from './song.interface';
+
+import { MusicSongService } from './song.service';
 
 @Controller('api/music/songs')
-export class SongController {
-  constructor(private readonly songService: SongService) {}
+export class MusicSongController {
+  constructor(private readonly musicSongService: MusicSongService) {}
 
   @Get()
-  public async findAll(): Promise<Song[]> {
-    return await this.songService.findAll();
+  public async findAll(): Promise<ISong[]> {
+    try {
+      return await this.musicSongService.findAll();
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Get(':songId')
   public async findOne(
     @Param('songId', ParseIntPipe) songId: number,
-  ): Promise<Song> {
-    return await this.songService.findOne(songId);
-  }
+  ): Promise<ISong> {
+    try {
+      return await this.musicSongService.findOne(songId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
 
-  @Get(':songId/audio')
-  @HttpCode(HttpStatus.PARTIAL_CONTENT)
-  @Header('Content-Type', 'audio/mpeg')
-  public async getAudio(
-    @Param('songId', ParseIntPipe) songId: number,
-  ): Promise<StreamableFile> {
-    const file = await this.songService.getAudio(songId);
-
-    return new StreamableFile(file);
-  }
-
-  @Get(':songId/cover')
-  @HttpCode(HttpStatus.PARTIAL_CONTENT)
-  @Header('Content-Type', 'image/jpeg')
-  public async getCover(
-    @Param('songId', ParseIntPipe) songId: number,
-  ): Promise<StreamableFile> {
-    const file = await this.songService.getCover(songId);
-
-    return new StreamableFile(file);
+      throw error;
+    }
   }
 
   @Patch(':songId/listens')
   public async addListens(
     @Param('songId', ParseIntPipe) songId: number,
   ): Promise<void> {
-    return await this.songService.addListens(songId);
+    try {
+      return await this.musicSongService.addListens(songId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 }

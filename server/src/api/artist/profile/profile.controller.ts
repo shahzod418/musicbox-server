@@ -1,35 +1,34 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  Header,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
   Post,
   Query,
-  StreamableFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
-import type { Success } from '@interfaces/response';
-import type { Artist } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
+
+import type { IArtist } from './profile.interface';
+import type { ISuccess } from '@interfaces/response';
 
 import {
-  ArtistCreateInput,
-  ArtistFiles,
-  ArtistUpdateInput,
-} from './profile.schema';
-import { ProfileService } from './profile.service';
+  ArtistFilesDto,
+  CreateArtistDto,
+  UpdateArtistDto,
+} from './profile.dto';
+import { ArtistProfileService } from './profile.service';
 
 @Controller('api/artist/profile')
-export class ProfileController {
-  constructor(private readonly profileService: ProfileService) {}
+export class ArtistProfileController {
+  constructor(private readonly artistProfileService: ArtistProfileService) {}
 
   @Post()
   @UseInterceptors(
@@ -39,21 +38,37 @@ export class ProfileController {
     ]),
   )
   public async create(
-    @Body() data: ArtistCreateInput,
-    @UploadedFiles() files: ArtistFiles,
-  ): Promise<Artist> {
-    return await this.profileService.create(data, {
-      avatar: files?.avatar?.at(0),
-      cover: files?.cover?.at(0),
-    });
+    @Body() data: CreateArtistDto,
+    @UploadedFiles() files: ArtistFilesDto,
+  ): Promise<IArtist> {
+    try {
+      return await this.artistProfileService.create(data, {
+        avatar: files?.avatar?.at(0),
+        cover: files?.cover?.at(0),
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Get(':artistId')
   public async findOne(
     @Param('artistId', ParseIntPipe) artistId: number,
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<Artist> {
-    return await this.profileService.findOne(artistId, userId);
+  ): Promise<IArtist> {
+    try {
+      return await this.artistProfileService.findOne(artistId, userId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Patch(':artistId')
@@ -65,43 +80,35 @@ export class ProfileController {
   )
   public async update(
     @Param('artistId', ParseIntPipe) artistId: number,
-    @Body() data: ArtistUpdateInput,
-    @UploadedFiles() files: ArtistFiles,
-  ): Promise<Artist> {
-    return await this.profileService.update(artistId, data, {
-      avatar: files?.avatar?.at(0),
-      cover: files?.cover?.at(0),
-    });
+    @Body() data: UpdateArtistDto,
+    @UploadedFiles() files: ArtistFilesDto,
+  ): Promise<IArtist> {
+    try {
+      return await this.artistProfileService.update(artistId, data, {
+        avatar: files?.avatar?.at(0),
+        cover: files?.cover?.at(0),
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Delete(':artistId')
   public async remove(
     @Param('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Success> {
-    return await this.profileService.remove(artistId);
-  }
+  ): Promise<ISuccess> {
+    try {
+      return await this.artistProfileService.remove(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
 
-  @Get(':artistId/avatar')
-  @HttpCode(HttpStatus.PARTIAL_CONTENT)
-  @Header('Content-Type', 'image/jpeg')
-  public async getAvatar(
-    @Param('artistId', ParseIntPipe) artistId: number,
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<StreamableFile> {
-    const file = await this.profileService.getAvatar(artistId, userId);
-
-    return new StreamableFile(file);
-  }
-
-  @Get(':artistId/cover')
-  @HttpCode(HttpStatus.PARTIAL_CONTENT)
-  @Header('Content-Type', 'image/jpeg')
-  public async getCover(
-    @Param('artistId', ParseIntPipe) artistId: number,
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<StreamableFile> {
-    const file = await this.profileService.getCover(artistId, userId);
-
-    return new StreamableFile(file);
+      throw error;
+    }
   }
 }

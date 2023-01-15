@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 
-import { AlbumController } from './album.controller';
-import { AlbumService } from './album.service';
+import { PrismaModule } from '@database/prisma.module';
+
+import { ManagerAlbumController } from './album.controller';
+import { ManagerAlbumService } from './album.service';
 
 @Module({
-  controllers: [AlbumController],
-  providers: [AlbumService],
+  controllers: [ManagerAlbumController],
+  providers: [ManagerAlbumService],
+  imports: [PrismaModule],
 })
-export class AlbumModule {}
+export class ManagerAlbumModule {}

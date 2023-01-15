@@ -1,61 +1,81 @@
 import {
+  BadRequestException,
   Controller,
   Get,
-  Header,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
   Query,
-  StreamableFile,
 } from '@nestjs/common';
 
-import type { Success } from '@interfaces/response';
-import type { Album } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
 
-import { AlbumService } from './album.service';
+import type { IAlbum } from './album.interface';
+import type { ISuccess } from '@interfaces/response';
+
+import { ManagerAlbumService } from './album.service';
 
 @Controller('api/manager/albums')
-export class AlbumController {
-  constructor(private readonly albumService: AlbumService) {}
+export class ManagerAlbumController {
+  constructor(private readonly managerAlbumService: ManagerAlbumService) {}
 
   @Get()
   public async findAll(
     @Query('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Album[]> {
-    return await this.albumService.findAll(artistId);
+  ): Promise<IAlbum[]> {
+    try {
+      return await this.managerAlbumService.findAll(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Get(':albumId')
   public async findOne(
     @Param('albumId', ParseIntPipe) albumId: number,
-  ): Promise<Album> {
-    return await this.albumService.findOne(albumId);
-  }
+  ): Promise<IAlbum> {
+    try {
+      return await this.managerAlbumService.findOne(albumId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
 
-  @Get(':albumId/cover')
-  @HttpCode(HttpStatus.PARTIAL_CONTENT)
-  @Header('Content-Type', 'image/jpeg')
-  public async getCover(
-    @Param('albumId', ParseIntPipe) albumId: number,
-  ): Promise<StreamableFile> {
-    const file = await this.albumService.getCover(albumId);
-
-    return new StreamableFile(file);
+      throw error;
+    }
   }
 
   @Patch(':albumId/approve')
   public async approve(
     @Param('albumId', ParseIntPipe) albumId: number,
-  ): Promise<Success> {
-    return await this.albumService.approve(albumId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.managerAlbumService.approve(albumId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Patch(':albumId/decline')
   public async decline(
     @Param('albumId', ParseIntPipe) albumId: number,
-  ): Promise<Success> {
-    return await this.albumService.decline(albumId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.managerAlbumService.decline(albumId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 }

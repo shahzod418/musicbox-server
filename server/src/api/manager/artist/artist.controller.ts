@@ -1,69 +1,78 @@
 import {
+  BadRequestException,
   Controller,
   Get,
-  Header,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
-  StreamableFile,
 } from '@nestjs/common';
 
-import type { Success } from '@interfaces/response';
-import type { Artist } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
 
-import { ArtistService } from './artist.service';
+import type { IArtist } from './artist.interface';
+import type { ISuccess } from '@interfaces/response';
+
+import { ManagerArtistService } from './artist.service';
 
 @Controller('api/manager/artists')
-export class ArtistController {
-  constructor(private readonly artistService: ArtistService) {}
+export class ManagerArtistController {
+  constructor(private readonly managerArtistService: ManagerArtistService) {}
 
   @Get()
-  public async findAll(): Promise<Artist[]> {
-    return await this.artistService.findAll();
+  public async findAll(): Promise<IArtist[]> {
+    try {
+      return await this.managerArtistService.findAll();
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Get(':artistId')
   public async findOne(
     @Param('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Artist> {
-    return await this.artistService.findOne(artistId);
-  }
+  ): Promise<IArtist> {
+    try {
+      return await this.managerArtistService.findOne(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
 
-  @Get(':artistId/avatar')
-  @HttpCode(HttpStatus.PARTIAL_CONTENT)
-  @Header('Content-Type', 'image/jpeg')
-  public async getAvatar(
-    @Param('artistId', ParseIntPipe) artistId: number,
-  ): Promise<StreamableFile> {
-    const file = await this.artistService.getAvatar(artistId);
-
-    return new StreamableFile(file);
-  }
-
-  @Get(':artistId/cover')
-  @HttpCode(HttpStatus.PARTIAL_CONTENT)
-  @Header('Content-Type', 'image/jpeg')
-  public async getCover(
-    @Param('artistId', ParseIntPipe) artistId: number,
-  ): Promise<StreamableFile> {
-    const file = await this.artistService.getCover(artistId);
-
-    return new StreamableFile(file);
+      throw error;
+    }
   }
 
   @Patch(':artistId/approve')
   public async approve(
     @Param('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Success> {
-    return await this.artistService.approve(artistId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.managerArtistService.approve(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Patch(':artistId/decline')
   public async decline(
     @Param('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Success> {
-    return await this.artistService.decline(artistId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.managerArtistService.decline(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 }

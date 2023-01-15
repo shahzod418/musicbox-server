@@ -5,37 +5,33 @@ import { FileService } from '@services/file/file.service';
 
 import { FileType, RoleType } from '@interfaces/file';
 
-import type { Success } from '@interfaces/response';
-import type { Album } from '@prisma/client';
+import type { IAlbum } from './album.interface';
+import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class AlbumService {
+export class AdminAlbumService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
   ) {}
 
-  public async findAll(): Promise<Album[]> {
+  public async findAll(): Promise<IAlbum[]> {
     return await this.prisma.album.findMany();
   }
 
-  public async remove(albumId: number): Promise<Success> {
-    try {
-      const { artistId, cover } = await this.prisma.album.delete({
-        where: { id: albumId },
-        select: { artistId: true, cover: true },
-      });
+  public async remove(albumId: number): Promise<ISuccess> {
+    const { artistId, cover } = await this.prisma.album.delete({
+      where: { id: albumId },
+      select: { artistId: true, cover: true },
+    });
 
-      await this.file.removeFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+    await this.file.removeFile(
+      artistId,
+      RoleType.Artist,
+      FileType.Cover,
+      cover,
+    );
 
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
+    return { success: true };
   }
 }

@@ -2,20 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Status } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
-import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
-
-import type { Album, Song } from '@prisma/client';
+import type { IAlbum, IAlbumWithSongs } from './album.interface';
 
 @Injectable()
-export class AlbumService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly file: FileService,
-  ) {}
+export class MusicAlbumService {
+  constructor(private readonly prisma: PrismaService) {}
 
-  public async findAll(): Promise<Album[]> {
+  public async findAll(): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
       where: {
         OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
@@ -23,7 +17,7 @@ export class AlbumService {
     });
   }
 
-  public async findOne(albumId: number): Promise<Album & { songs: Song[] }> {
+  public async findOne(albumId: number): Promise<IAlbumWithSongs> {
     return await this.prisma.album.findFirstOrThrow({
       where: {
         id: albumId,
@@ -33,22 +27,5 @@ export class AlbumService {
         songs: true,
       },
     });
-  }
-
-  public async getCover(albumId: number): Promise<Buffer> {
-    const { cover } = await this.prisma.album.findFirstOrThrow({
-      where: {
-        id: albumId,
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-      },
-      select: { cover: true },
-    });
-
-    return await this.file.getFile(
-      albumId,
-      RoleType.Artist,
-      FileType.Cover,
-      cover,
-    );
   }
 }

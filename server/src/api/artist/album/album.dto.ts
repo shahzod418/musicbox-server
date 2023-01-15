@@ -6,11 +6,9 @@ import {
   MinLength,
 } from 'class-validator';
 
-import type { Prisma } from '@prisma/client';
+import type { ICreateAlbum, IUpdateAlbum } from './album.interface';
 
-export class IAlbumCreateInput
-  implements Pick<Prisma.AlbumCreateInput, 'name'>
-{
+export class CreateAlbumDto implements ICreateAlbum {
   @MinLength(3)
   @MaxLength(30)
   @IsString()
@@ -20,9 +18,7 @@ export class IAlbumCreateInput
   artistId: number;
 }
 
-export class IAlbumUpdateInput
-  implements Pick<Prisma.AlbumUpdateInput, 'name'>
-{
+export class UpdateAlbumDto implements IUpdateAlbum {
   @MinLength(3)
   @MaxLength(30)
   @IsString()

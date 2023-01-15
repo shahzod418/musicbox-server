@@ -6,9 +6,9 @@ import {
   MinLength,
 } from 'class-validator';
 
-import type { Prisma } from '@prisma/client';
+import type { ICreateArtist, IUpdateArtist } from './profile.interface';
 
-export class ArtistFiles {
+export class ArtistFilesDto {
   @IsOptional()
   avatar?: Express.Multer.File[];
 
@@ -16,9 +16,7 @@ export class ArtistFiles {
   cover?: Express.Multer.File[];
 }
 
-export class ArtistCreateInput
-  implements Pick<Prisma.ArtistCreateInput, 'name' | 'description'>
-{
+export class CreateArtistDto implements ICreateArtist {
   @IsString()
   @MinLength(3)
   @MaxLength(30)
@@ -32,9 +30,7 @@ export class ArtistCreateInput
   userId: number;
 }
 
-export class ArtistUpdateInput
-  implements Pick<Prisma.ArtistUpdateInput, 'name' | 'description'>
-{
+export class UpdateArtistDto implements IUpdateArtist {
   @IsString()
   @MinLength(3)
   @MaxLength(30)

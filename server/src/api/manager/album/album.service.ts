@@ -2,21 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { Status } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
-import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
-
-import type { Success } from '@interfaces/response';
-import type { Album } from '@prisma/client';
+import type { IAlbum } from './album.interface';
+import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class AlbumService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly file: FileService,
-  ) {}
+export class ManagerAlbumService {
+  constructor(private readonly prisma: PrismaService) {}
 
-  public async findAll(artistId: number): Promise<Album[]> {
+  public async findAll(artistId: number): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
       where: {
         artistId,
@@ -25,7 +19,7 @@ export class AlbumService {
     });
   }
 
-  public async findOne(albumId: number): Promise<Album> {
+  public async findOne(albumId: number): Promise<IAlbum> {
     return await this.prisma.album.findFirstOrThrow({
       where: {
         id: albumId,
@@ -34,66 +28,41 @@ export class AlbumService {
     });
   }
 
-  public async getCover(albumId: number): Promise<Buffer> {
-    const { cover } = await this.prisma.album.findFirstOrThrow({
-      where: {
-        id: albumId,
-        status: Status.REVIEW,
+  public async approve(albumId: number): Promise<ISuccess> {
+    await this.prisma.album.update({
+      data: {
+        status: {
+          set: Status.APPROVED,
+        },
       },
-      select: { cover: true },
+      where: { id: albumId },
     });
 
-    return await this.file.getFile(
-      albumId,
-      RoleType.Artist,
-      FileType.Cover,
-      cover,
-    );
+    return { success: true };
   }
 
-  public async approve(albumId: number): Promise<Success> {
-    try {
-      await this.prisma.album.update({
-        data: {
-          status: {
-            set: Status.APPROVED,
-          },
+  public async decline(albumId: number): Promise<ISuccess> {
+    await this.prisma.album.update({
+      data: {
+        status: {
+          set: Status.DECLINED,
         },
-        where: { id: albumId },
-      });
-
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
-  }
-
-  public async decline(albumId: number): Promise<Success> {
-    try {
-      await this.prisma.album.update({
-        data: {
-          status: {
-            set: Status.DECLINED,
-          },
-          songs: {
-            updateMany: {
-              data: {
-                status: {
-                  set: Status.DECLINED,
-                },
+        songs: {
+          updateMany: {
+            data: {
+              status: {
+                set: Status.DECLINED,
               },
-              where: {
-                albumId,
-              },
+            },
+            where: {
+              albumId,
             },
           },
         },
-        where: { id: albumId },
-      });
+      },
+      where: { id: albumId },
+    });
 
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
+    return { success: true };
   }
 }

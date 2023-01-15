@@ -1,23 +1,48 @@
-import { Controller, Delete, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 
-import type { Success } from '@interfaces/response';
-import type { Artist } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
 
-import { ArtistService } from './artist.service';
+import type { IArtist } from './artist.interface';
+import type { ISuccess } from '@interfaces/response';
+
+import { AdminArtistService } from './artist.service';
 
 @Controller('api/admin/artists')
-export class ArtistController {
-  constructor(private readonly artistService: ArtistService) {}
+export class AdminArtistController {
+  constructor(private readonly adminArtistService: AdminArtistService) {}
 
   @Get()
-  public async findAll(): Promise<Artist[]> {
-    return await this.artistService.findAll();
+  public async findAll(): Promise<IArtist[]> {
+    try {
+      return await this.adminArtistService.findAll();
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Delete(':artistId')
   public async remove(
     @Param('artistId', ParseIntPipe) artistId: number,
-  ): Promise<Success> {
-    return await this.artistService.remove(artistId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.adminArtistService.remove(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 }

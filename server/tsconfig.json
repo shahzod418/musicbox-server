@@ -17,12 +17,15 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "esModuleInterop": true,
     "paths": {
       "@database/*": ["./src/database/*"],
       "@api/*": ["./src/api/*"],
       "@interfaces/*": ["./src/interfaces/*"],
       "@services/*": ["./src/services/*"],
-      "@guards/*": ["./src/guards/*"]
+      "@guards/*": ["./src/guards/*"],
+      "@errors/*": ["./src/errors/*"],
+      "@pipes/*": ["./src/pipes/*"]
     }
   }
 }

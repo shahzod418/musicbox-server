@@ -27,6 +27,7 @@ model User {
   hash      String
   name      String?
   role      Role         @default(USER)
+  avatar    String?
   songs     UserSong[]
   albums    UserAlbum[]
   artists   UserArtist[]

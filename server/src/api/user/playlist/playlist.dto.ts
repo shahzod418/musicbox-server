@@ -6,11 +6,9 @@ import {
   MinLength,
 } from 'class-validator';
 
-import type { Prisma } from '@prisma/client';
+import type { ICreatePlaylist, IUpdatePlaylist } from './playlist.interface';
 
-export class PlaylistCreateInput
-  implements Pick<Prisma.PlaylistCreateInput, 'name'>
-{
+export class CreatePlaylistDto implements ICreatePlaylist {
   @IsString()
   @MinLength(3)
   @MaxLength(30)
@@ -20,12 +18,10 @@ export class PlaylistCreateInput
   userId: number;
 }
 
-export class PlaylistUpdateInput
-  implements Pick<Prisma.PlaylistUpdateInput, 'name'>
-{
+export class UpdatePlaylistDto implements IUpdatePlaylist {
   @IsString()
   @MinLength(3)
   @MaxLength(30)
   @IsOptional()
-  name: string;
+  name?: string;
 }

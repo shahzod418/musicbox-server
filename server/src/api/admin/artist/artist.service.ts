@@ -5,29 +5,34 @@ import { FileService } from '@services/file/file.service';
 
 import { RoleType } from '@interfaces/file';
 
-import type { Success } from '@interfaces/response';
-import type { Artist } from '@prisma/client';
+import type { IArtist } from './artist.interface';
+import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class ArtistService {
+export class AdminArtistService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
   ) {}
 
-  public async findAll(): Promise<Artist[]> {
-    return this.prisma.artist.findMany();
+  public async findAll(): Promise<IArtist[]> {
+    return this.prisma.artist.findMany({
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        cover: true,
+        description: true,
+        status: true,
+      },
+    });
   }
 
-  public async remove(artistId: number): Promise<Success> {
-    try {
-      await this.prisma.artist.delete({ where: { id: artistId } });
+  public async remove(artistId: number): Promise<ISuccess> {
+    await this.prisma.artist.delete({ where: { id: artistId } });
 
-      await this.file.removeResources(artistId, RoleType.Artist);
+    await this.file.removeResources(artistId, RoleType.Artist);
 
-      return { success: true };
-    } catch {
-      return { success: false };
-    }
+    return { success: true };
   }
 }

@@ -1,23 +1,48 @@
-import { Controller, Delete, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 
-import type { Success } from '@interfaces/response';
-import type { Album } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
 
-import { AlbumService } from './album.service';
+import type { IAlbum } from './album.interface';
+import type { ISuccess } from '@interfaces/response';
+
+import { AdminAlbumService } from './album.service';
 
 @Controller('api/admin/albums')
-export class AlbumController {
-  constructor(private readonly albumService: AlbumService) {}
+export class AdminAlbumController {
+  constructor(private readonly adminAlbumService: AdminAlbumService) {}
 
   @Get()
-  public async findAll(): Promise<Album[]> {
-    return await this.albumService.findAll();
+  public async findAll(): Promise<IAlbum[]> {
+    try {
+      return await this.adminAlbumService.findAll();
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Delete(':albumId')
   public async remove(
     @Param('albumId', ParseIntPipe) albumId: number,
-  ): Promise<Success> {
-    return await this.albumService.remove(albumId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.adminAlbumService.remove(albumId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 }

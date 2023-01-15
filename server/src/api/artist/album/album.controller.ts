@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,70 +14,128 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import type { Success } from '@interfaces/response';
-import type { Album as IAlbum } from '@prisma/client';
+import { PrismaClientError } from '@errors/prisma';
 
-import { IAlbumCreateInput, IAlbumUpdateInput } from './album.schema';
-import { AlbumService } from './album.service';
+import type { IAlbum, ISong } from './album.interface';
+import type { ISuccess } from '@interfaces/response';
+
+import { CreateAlbumDto, UpdateAlbumDto } from './album.dto';
+import { ArtistAlbumService } from './album.service';
 
 @Controller('api/artist/albums')
-export class AlbumController {
-  constructor(private readonly albumService: AlbumService) {}
+export class ArtistAlbumController {
+  constructor(private readonly artistAlbumService: ArtistAlbumService) {}
 
   @Post()
   @UseInterceptors(FileInterceptor('cover'))
   public async create(
-    @Body() data: IAlbumCreateInput,
+    @Body() data: CreateAlbumDto,
     @UploadedFile() cover?: Express.Multer.File,
   ): Promise<IAlbum> {
-    return await this.albumService.create(data, cover);
+    try {
+      return await this.artistAlbumService.create(data, cover);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Get()
   public async findAll(
     @Query('artistId', ParseIntPipe) artistId: number,
   ): Promise<IAlbum[]> {
-    return await this.albumService.findAll(artistId);
+    try {
+      return await this.artistAlbumService.findAll(artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @Get(':albumId')
   public async findOne(
     @Param('albumId', ParseIntPipe) albumId: number,
     @Query('artistId', ParseIntPipe) artistId: number,
-  ): Promise<IAlbum> {
-    return await this.albumService.findOne(albumId, artistId);
+  ): Promise<IAlbum & ISong> {
+    try {
+      return await this.artistAlbumService.findOne(albumId, artistId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Patch(':albumId')
   @UseInterceptors(FileInterceptor('cover'))
   public async update(
     @Param('albumId', ParseIntPipe) albumId: number,
-    @Body() data: IAlbumUpdateInput,
+    @Body() data: UpdateAlbumDto,
     @UploadedFile() cover?: Express.Multer.File,
   ): Promise<IAlbum> {
-    return await this.albumService.update(albumId, data, cover);
+    try {
+      return await this.artistAlbumService.update(albumId, data, cover);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Delete(':albumId')
   public async remove(
     @Param('albumId', ParseIntPipe) albumId: number,
-  ): Promise<Success> {
-    return await this.albumService.remove(albumId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.artistAlbumService.remove(albumId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Patch(':albumId/:songId')
   public async addSong(
     @Param('albumId', ParseIntPipe) albumId: number,
     @Param('songId', ParseIntPipe) songId: number,
-  ): Promise<Success> {
-    return await this.albumService.addSong(albumId, songId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.artistAlbumService.addSong(albumId, songId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 
   @Delete(':albumId/:songId')
   public async removeSong(
     @Param('albumId', ParseIntPipe) albumId: number,
     @Param('songId', ParseIntPipe) songId: number,
-  ): Promise<Success> {
-    return await this.albumService.removeSong(albumId, songId);
+  ): Promise<ISuccess> {
+    try {
+      return await this.artistAlbumService.removeSong(albumId, songId);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
+
+      throw error;
+    }
   }
 }
