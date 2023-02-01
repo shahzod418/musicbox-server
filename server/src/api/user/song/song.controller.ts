@@ -5,17 +5,20 @@ import {
   Delete,
   Get,
   ParseIntPipe,
-  Patch,
+  Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 
 import { PrismaClientError } from '@errors/prisma';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
 import type { ISong } from './song.interface';
 import type { ISuccess } from '@interfaces/response';
 
 import { UserSongService } from './song.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('api/user/songs')
 export class UserSongController {
   constructor(private readonly userSongService: UserSongService) {}
@@ -35,8 +38,8 @@ export class UserSongController {
     }
   }
 
-  @Patch()
-  public async addArtist(
+  @Put()
+  public async addSong(
     @Query('userId', ParseIntPipe) userId: number,
     @Body('songId', ParseIntPipe) songId: number,
   ): Promise<ISuccess> {
@@ -44,7 +47,10 @@ export class UserSongController {
       return await this.userSongService.addSong(userId, songId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
-        throw new BadRequestException(error.meta.cause);
+        if (error.meta?.target) {
+          throw new BadRequestException('Song already added');
+        }
+        throw new BadRequestException('Song not found');
       }
 
       throw error;
@@ -52,7 +58,7 @@ export class UserSongController {
   }
 
   @Delete()
-  public async removeArtist(
+  public async removeSong(
     @Query('userId', ParseIntPipe) userId: number,
     @Body('songId', ParseIntPipe) songId: number,
   ): Promise<ISuccess> {

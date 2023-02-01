@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Role, Status } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
+import { NotFoundError } from '@errors/not-found';
 import { FileService } from '@services/file/file.service';
 
 import { FileType, RoleType } from '@interfaces/file';
 
 @Injectable()
-export class CoverService {
+export class ContentCoverService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -22,8 +23,15 @@ export class CoverService {
         }),
         ...(role === Role.MANAGER && { status: Status.REVIEW }),
       },
-      select: { artistId: true, cover: true },
+      select: {
+        artistId: true,
+        cover: true,
+      },
     });
+
+    if (!cover) {
+      throw new NotFoundError(FileType.Cover);
+    }
 
     return await this.file.getFile(
       artistId,
@@ -42,8 +50,15 @@ export class CoverService {
         }),
         ...(role === Role.MANAGER && { status: Status.REVIEW }),
       },
-      select: { artistId: true, cover: true },
+      select: {
+        artistId: true,
+        cover: true,
+      },
     });
+
+    if (!cover) {
+      throw new NotFoundError(FileType.Cover);
+    }
 
     return await this.file.getFile(
       artistId,
@@ -62,8 +77,14 @@ export class CoverService {
         }),
         ...(role === Role.MANAGER && { status: Status.REVIEW }),
       },
-      select: { cover: true },
+      select: {
+        cover: true,
+      },
     });
+
+    if (!cover) {
+      throw new NotFoundError(FileType.Cover);
+    }
 
     return await this.file.getFile(
       artistId,
@@ -75,11 +96,15 @@ export class CoverService {
 
   public async getPlaylistCover(playlistId: number): Promise<Buffer> {
     const { cover } = await this.prisma.playlist.findFirstOrThrow({
-      where: {
-        id: playlistId,
+      where: { id: playlistId },
+      select: {
+        cover: true,
       },
-      select: { cover: true },
     });
+
+    if (!cover) {
+      throw new NotFoundError(FileType.Cover);
+    }
 
     return await this.file.getFile(
       playlistId,

@@ -6,15 +6,23 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
+import { Roles } from '@decorators/roles.decorator';
 import { PrismaClientError } from '@errors/prisma';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { RolesGuard } from '@guards/roles.guard';
 
 import type { IAlbum } from './album.interface';
 import type { ISuccess } from '@interfaces/response';
 
 import { ManagerAlbumService } from './album.service';
 
+@UseGuards(RolesGuard)
+@Roles(Role.MANAGER)
+@UseGuards(JwtAuthGuard)
 @Controller('api/manager/albums')
 export class ManagerAlbumController {
   constructor(private readonly managerAlbumService: ManagerAlbumService) {}

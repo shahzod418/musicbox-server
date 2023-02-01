@@ -5,17 +5,20 @@ import {
   Delete,
   Get,
   ParseIntPipe,
-  Patch,
+  Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 
 import { PrismaClientError } from '@errors/prisma';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
 import type { IArtist } from './artist.interface';
 import type { ISuccess } from '@interfaces/response';
 
 import { UserArtistService } from './artist.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('api/user/artists')
 export class UserArtistController {
   constructor(private readonly userArtistService: UserArtistService) {}
@@ -35,7 +38,7 @@ export class UserArtistController {
     }
   }
 
-  @Patch()
+  @Put()
   public async addArtist(
     @Query('userId', ParseIntPipe) userId: number,
     @Body('artistId', ParseIntPipe) artistId: number,
@@ -44,7 +47,10 @@ export class UserArtistController {
       return await this.userArtistService.addArtist(userId, artistId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
-        throw new BadRequestException(error.meta.cause);
+        if (error.meta?.target) {
+          throw new BadRequestException('Artist already added');
+        }
+        throw new BadRequestException('Artist not found');
       }
 
       throw error;

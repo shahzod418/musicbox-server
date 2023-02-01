@@ -14,7 +14,7 @@ export class PrismaService extends PrismaClient {
   async onModuleInit(): Promise<void> {
     await this.$connect();
 
-    // await this.user.create({
+    // await this.user.upsert({
     //   data: {
     //     email: 'admin@musicbox.com',
     //     hash: '$2b$10$HiwZ/mSy5MclVeic/Hqbe.xBoosypUXFT2V1MLDiNIgDo5s7rKZha',

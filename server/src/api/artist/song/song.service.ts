@@ -32,18 +32,10 @@ export class ArtistSongService {
     const song = await this.prisma.song.create({
       data: {
         ...payload,
-        ...(cover && { cover: cover.originalname }),
-        ...(albumId && {
-          album: {
-            connect: { id: albumId },
-          },
-        }),
-        audio: audio.originalname,
-        artist: {
-          connect: {
-            id: Number(artistId),
-          },
-        },
+        ...(cover && { cover: cover.name }),
+        ...(albumId && { album: { connect: { id: albumId } } }),
+        artist: { connect: { id: artistId } },
+        audio: audio.name,
       },
       select: {
         id: true,
@@ -52,7 +44,6 @@ export class ArtistSongService {
         listens: true,
         explicit: true,
         status: true,
-        audio: true,
         cover: true,
       },
     });
@@ -65,6 +56,7 @@ export class ArtistSongService {
         cover,
       );
     }
+
     await this.file.addFile(
       Number(artistId),
       RoleType.Artist,
@@ -85,15 +77,14 @@ export class ArtistSongService {
         listens: true,
         explicit: true,
         status: true,
-        audio: true,
         cover: true,
       },
     });
   }
 
-  public async findOne(songId: number, artistId: number): Promise<ISong> {
+  public async findOne(songId: number): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, artistId },
+      where: { id: songId },
       select: {
         id: true,
         name: true,
@@ -101,7 +92,6 @@ export class ArtistSongService {
         listens: true,
         explicit: true,
         status: true,
-        audio: true,
         cover: true,
       },
     });
@@ -109,45 +99,32 @@ export class ArtistSongService {
 
   public async update(
     songId: number,
-    artistId: number,
     data: IUpdateSong,
     files: IUpdateSongFiles,
   ): Promise<ISong> {
     const { albumId, ...payload } = data;
     const { audio, cover } = files;
 
-    const { audio: previousAudio, cover: previousCover } =
-      await this.prisma.song.findFirstOrThrow({
-        where: { id: songId, artistId },
-        select: {
-          audio: true,
-          cover: true,
-        },
-      });
+    const {
+      artistId,
+      audio: previousAudio,
+      cover: previousCover,
+    } = await this.prisma.song.findFirstOrThrow({
+      where: { id: songId },
+      select: {
+        artistId: true,
+        audio: true,
+        cover: true,
+      },
+    });
 
     const song = await this.prisma.song.update({
       data: {
         ...payload,
-        ...(albumId && {
-          album: {
-            connect: {
-              id: albumId,
-            },
-          },
-        }),
-        ...(audio && {
-          audio: {
-            set: audio.originalname,
-          },
-        }),
-        ...(cover && {
-          cover: {
-            set: cover.originalname,
-          },
-        }),
-        status: {
-          set: Status.REVIEW,
-        },
+        ...(albumId && { album: { connect: { id: albumId } } }),
+        ...(audio && { audio: { set: audio.name } }),
+        ...(cover && { cover: { set: cover.name } }),
+        status: { set: Status.REVIEW },
       },
       where: { id: songId },
       select: {
@@ -157,30 +134,26 @@ export class ArtistSongService {
         listens: true,
         explicit: true,
         status: true,
-        audio: true,
         cover: true,
       },
     });
 
     if (cover) {
-      await this.file.addFile(artistId, RoleType.Artist, FileType.Cover, cover);
-
-      if (previousCover) {
-        await this.file.removeFile(
-          artistId,
-          RoleType.Artist,
-          FileType.Cover,
-          previousCover,
-        );
-      }
+      await this.file.updateFile(
+        artistId,
+        RoleType.Artist,
+        FileType.Cover,
+        cover,
+        previousCover,
+      );
     }
 
     if (audio) {
-      await this.file.addFile(artistId, RoleType.Artist, FileType.Audio, audio);
-      await this.file.removeFile(
+      await this.file.updateFile(
         artistId,
         RoleType.Artist,
         FileType.Audio,
+        audio,
         previousAudio,
       );
     }
@@ -190,14 +163,8 @@ export class ArtistSongService {
 
   public async remove(songId: number): Promise<ISuccess> {
     await this.prisma.song.update({
-      data: {
-        status: {
-          set: Status.DELETED,
-        },
-      },
-      where: {
-        id: songId,
-      },
+      data: { status: { set: Status.DELETED } },
+      where: { id: songId },
     });
 
     return { success: true };

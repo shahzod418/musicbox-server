@@ -12,13 +12,14 @@ import {
 import { Role } from '@prisma/client';
 import { Response } from 'express';
 
+import { NotFoundError } from '@errors/not-found';
 import { PrismaClientError } from '@errors/prisma';
 
-import { AudioService } from './audio.service';
+import { ContentAudioService } from './audio.service';
 
-@Controller('api')
-export class AudioController {
-  constructor(private readonly audioService: AudioService) {}
+@Controller('api/content')
+export class ContentAudioController {
+  constructor(private readonly contentAudioService: ContentAudioService) {}
 
   @Get('songs/:songId/audio')
   @Header('Accept-Ranges', 'bytes')
@@ -29,11 +30,8 @@ export class AudioController {
     @Param('songId', ParseIntPipe) songId: number,
   ): Promise<void> {
     try {
-      const { stream, size, start, end } = await this.audioService.getAudio(
-        songId,
-        Role.ADMIN,
-        range,
-      );
+      const { stream, size, start, end } =
+        await this.contentAudioService.getAudio(songId, Role.ADMIN, range);
 
       if (range) {
         const chunksize = end - start + 1;
@@ -52,6 +50,10 @@ export class AudioController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof NotFoundError) {
+        throw new BadRequestException(error.message);
       }
 
       throw error;

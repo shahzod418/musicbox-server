@@ -12,20 +12,20 @@ export class ManagerSongService {
 
   public async findAll(artistId: number): Promise<ISong[]> {
     return await this.prisma.song.findMany({
-      where: {
-        artistId,
-        status: Status.REVIEW,
-      },
+      where: { artistId, status: Status.REVIEW },
       select: {
         id: true,
         name: true,
         text: true,
         explicit: true,
-        status: true,
-        artistId: true,
         albumId: true,
         cover: true,
-        audio: true,
+        artist: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
@@ -38,22 +38,21 @@ export class ManagerSongService {
         name: true,
         text: true,
         explicit: true,
-        status: true,
-        artistId: true,
         albumId: true,
         cover: true,
-        audio: true,
+        artist: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
 
   public async approve(songId: number): Promise<ISuccess> {
     await this.prisma.song.update({
-      data: {
-        status: {
-          set: Status.APPROVED,
-        },
-      },
+      data: { status: { set: Status.APPROVED } },
       where: { id: songId },
     });
 
@@ -62,11 +61,7 @@ export class ManagerSongService {
 
   public async decline(songId: number): Promise<ISuccess> {
     await this.prisma.song.update({
-      data: {
-        status: {
-          set: Status.DECLINED,
-        },
-      },
+      data: { status: { set: Status.DECLINED } },
       where: { id: songId },
     });
 
@@ -78,7 +73,7 @@ export class ManagerSongService {
     explicit: boolean,
   ): Promise<ISuccess> {
     await this.prisma.song.update({
-      data: { explicit },
+      data: { explicit: { set: explicit } },
       where: { id: songId },
     });
 

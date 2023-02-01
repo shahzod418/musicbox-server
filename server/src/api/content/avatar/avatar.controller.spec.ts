@@ -2,19 +2,19 @@ import { Test } from '@nestjs/testing';
 
 import type { TestingModule } from '@nestjs/testing';
 
-import { AvatarController } from './avatar.controller';
-import { AvatarService } from './avatar.service';
+import { ContentAvatarController } from './avatar.controller';
+import { ContentAvatarService } from './avatar.service';
 
-describe('AvatarController', () => {
-  let controller: AvatarController;
+describe('ContentAvatarController', () => {
+  let controller: ContentAvatarController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AvatarController],
-      providers: [AvatarService],
+      controllers: [ContentAvatarController],
+      providers: [ContentAvatarService],
     }).compile();
 
-    controller = module.get<AvatarController>(AvatarController);
+    controller = module.get<ContentAvatarController>(ContentAvatarController);
   });
 
   it('should be defined', () => {

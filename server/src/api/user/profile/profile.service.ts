@@ -6,6 +6,8 @@ import { FileService } from '@services/file/file.service';
 import { FileType, RoleType } from '@interfaces/file';
 
 import type { IUpdateUser, IUser } from './profile.interface';
+import type { IFile } from '@interfaces/file';
+import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class UserProfileService {
@@ -29,7 +31,7 @@ export class UserProfileService {
   public async update(
     userId: number,
     data: IUpdateUser,
-    avatar?: Express.Multer.File,
+    avatar?: IFile,
   ): Promise<IUser> {
     const { avatar: previousAvatar } = await this.prisma.user.findFirstOrThrow({
       where: { id: userId },
@@ -39,15 +41,9 @@ export class UserProfileService {
     const user = await this.prisma.user.update({
       data: {
         ...data,
-        ...(avatar && {
-          avatar: {
-            set: avatar.originalname,
-          },
-        }),
+        ...(avatar && { avatar: { set: avatar.name } }),
       },
-      where: {
-        id: userId,
-      },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -67,5 +63,30 @@ export class UserProfileService {
     }
 
     return user;
+  }
+
+  public async removeAvatar(userId: number): Promise<ISuccess> {
+    const { avatar } = await this.prisma.user.findFirstOrThrow({
+      where: { id: userId },
+      select: {
+        avatar: true,
+      },
+    });
+
+    if (avatar) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { avatar: { set: null } },
+      });
+
+      await this.file.removeFile(
+        userId,
+        RoleType.User,
+        FileType.Avatar,
+        avatar,
+      );
+    }
+
+    return { success: true };
   }
 }

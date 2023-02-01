@@ -5,15 +5,23 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
+import { Roles } from '@decorators/roles.decorator';
 import { PrismaClientError } from '@errors/prisma';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { RolesGuard } from '@guards/roles.guard';
 
 import type { IArtist } from './artist.interface';
 import type { ISuccess } from '@interfaces/response';
 
 import { ManagerArtistService } from './artist.service';
 
+@UseGuards(RolesGuard)
+@Roles(Role.MANAGER)
+@UseGuards(JwtAuthGuard)
 @Controller('api/manager/artists')
 export class ManagerArtistController {
   constructor(private readonly managerArtistService: ManagerArtistService) {}

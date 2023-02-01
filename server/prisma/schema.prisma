@@ -36,12 +36,11 @@ model User {
 }
 
 model UserSong {
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     Int
-  song       Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
-  songId     Int
-  playlist   Playlist? @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-  playlistId Int?
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  song      Song           @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId    Int
+  playlists PlaylistSong[]
 
   @@id([userId, songId])
 }
@@ -106,10 +105,20 @@ model Artist {
 }
 
 model Playlist {
-  id     Int        @id @default(autoincrement())
+  id     Int            @id @default(autoincrement())
   name   String
   cover  String?
-  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
-  songs  UserSong[]
+  songs  PlaylistSong[]
+}
+
+model PlaylistSong {
+  song       UserSong @relation(fields: [userId, songId], references: [userId, songId], onDelete: Cascade)
+  userId     Int
+  songId     Int
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId Int
+
+  @@id([userId, songId, playlistId])
 }

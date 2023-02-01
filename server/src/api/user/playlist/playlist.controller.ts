@@ -8,32 +8,45 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
-  UploadedFile,
+  UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 import { PrismaClientError } from '@errors/prisma';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { ParseCoverPipe } from '@pipes/parse-cover';
+import { ValidationBodyPipe } from '@pipes/validation-body';
 
-import type { IPlaylist } from './playlist.interface';
+import type { IPlaylist, ISong } from './playlist.interface';
+import type { IFile } from '@interfaces/file';
 import type { ISuccess } from '@interfaces/response';
 
-import { CreatePlaylistDto, UpdatePlaylistDto } from './playlist.dto';
-import { UserPlaylistService } from './playlist.service';
+import { ICreatePlaylist, IUpdatePlaylist } from './playlist.interface';
 
+import { UserPlaylistService } from './playlist.service';
+import {
+  createPlaylistSchema,
+  updatePlaylistSchema,
+} from './playlist.validation';
+
+@UseGuards(JwtAuthGuard)
 @Controller('api/user/playlists')
 export class UserPlaylistController {
   constructor(private readonly userPlaylistService: UserPlaylistService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('cover'))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async create(
-    @Body() data: CreatePlaylistDto,
-    @UploadedFile() cover?: Express.Multer.File,
+    @Body(new ValidationBodyPipe(createPlaylistSchema)) data: ICreatePlaylist,
+    @UploadedFiles(new ParseCoverPipe({ optional: true }))
+    files: { cover?: IFile },
   ): Promise<IPlaylist> {
     try {
-      return await this.userPlaylistService.create(data, cover);
+      return await this.userPlaylistService.create(data, files.cover);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
@@ -62,7 +75,7 @@ export class UserPlaylistController {
   public async findOne(
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<IPlaylist> {
+  ): Promise<IPlaylist & { songs: ISong[] }> {
     try {
       return await this.userPlaylistService.findOne(playlistId, userId);
     } catch (error) {
@@ -75,14 +88,20 @@ export class UserPlaylistController {
   }
 
   @Patch(':playlistId')
-  @UseInterceptors(FileInterceptor('cover'))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async update(
     @Param('playlistId', ParseIntPipe) playlistId: number,
-    @Body() payload: UpdatePlaylistDto,
-    @UploadedFile() cover?: Express.Multer.File,
-  ): Promise<IPlaylist> {
+    @Body(new ValidationBodyPipe(updatePlaylistSchema))
+    payload: IUpdatePlaylist,
+    @UploadedFiles(new ParseCoverPipe({ optional: true }))
+    files: { cover?: IFile },
+  ): Promise<IPlaylist & { songs: ISong[] }> {
     try {
-      return await this.userPlaylistService.update(playlistId, payload, cover);
+      return await this.userPlaylistService.update(
+        playlistId,
+        payload,
+        files.cover,
+      );
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
@@ -107,17 +126,20 @@ export class UserPlaylistController {
     }
   }
 
-  @Patch(':playlistId/:songId')
+  @Put(':playlistId/:songId')
   public async addSong(
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Param('songId', ParseIntPipe) songId: number,
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<IPlaylist> {
+  ): Promise<ISuccess> {
     try {
       return await this.userPlaylistService.addSong(playlistId, userId, songId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
-        throw new BadRequestException(error.meta.cause);
+        if (error.meta?.target) {
+          throw new BadRequestException('Song already added');
+        }
+        throw new BadRequestException('Song not found');
       }
 
       throw error;
@@ -129,7 +151,7 @@ export class UserPlaylistController {
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Param('songId', ParseIntPipe) songId: number,
     @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<IPlaylist> {
+  ): Promise<ISuccess> {
     try {
       return await this.userPlaylistService.deleteSong(
         playlistId,

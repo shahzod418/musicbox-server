@@ -11,9 +11,7 @@ export class UserArtistService {
 
   public async findAll(userId: number): Promise<IArtist[]> {
     const { artists } = await this.prisma.user.findFirstOrThrow({
-      where: {
-        id: userId,
-      },
+      where: { id: userId },
       select: {
         artists: {
           select: {
@@ -21,7 +19,6 @@ export class UserArtistService {
               select: {
                 id: true,
                 name: true,
-                avatar: true,
                 cover: true,
                 description: true,
                 status: true,
@@ -36,19 +33,10 @@ export class UserArtistService {
   }
 
   public async addArtist(userId: number, artistId: number): Promise<ISuccess> {
-    await this.prisma.user.update({
+    await this.prisma.userArtist.create({
       data: {
-        artists: {
-          connect: {
-            userId_artistId: {
-              userId,
-              artistId,
-            },
-          },
-        },
-      },
-      where: {
-        id: userId,
+        user: { connect: { id: userId } },
+        artist: { connect: { id: artistId } },
       },
     });
 
@@ -59,20 +47,8 @@ export class UserArtistService {
     userId: number,
     artistId: number,
   ): Promise<ISuccess> {
-    await this.prisma.user.update({
-      data: {
-        artists: {
-          disconnect: {
-            userId_artistId: {
-              userId,
-              artistId,
-            },
-          },
-        },
-      },
-      where: {
-        id: userId,
-      },
+    await this.prisma.userArtist.delete({
+      where: { userId_artistId: { userId, artistId } },
     });
 
     return { success: true };

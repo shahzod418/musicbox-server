@@ -1,31 +1,61 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 
-import type { User } from '@prisma/client';
+import { InvalidPassword, UserAlreadyExists } from '@errors/auth';
+import { PrismaClientError } from '@errors/prisma';
+import { ValidationBodyPipe } from '@pipes/validation-body';
 
-import { UserSignIn, UserSignUp } from './auth.schema';
+import type { IAccessToken, IUser } from './auth.interface';
+
+import { ISignData } from './auth.interface';
+
 import { AuthService } from './auth.service';
+import { signSchema } from './auth.validation';
 
 @Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('signup')
-  public async signUp(@Body() data: UserSignUp): Promise<User> {
-    const user = await this.authService.signUp(data);
-    if (user instanceof Error) {
-      throw new BadRequestException(user.message);
-    }
+  @Post('sign-up')
+  public async signUp(
+    @Body(new ValidationBodyPipe<ISignData>(signSchema)) data: ISignData,
+  ): Promise<IUser> {
+    try {
+      return await this.authService.signUp(data);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new BadRequestException(error.meta.cause);
+      }
 
-    return user;
+      if (error instanceof UserAlreadyExists) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
-  @Post('signin')
-  public async signIn(@Body() data: UserSignIn): Promise<User> {
-    const user = await this.authService.signIn(data);
-    if (user instanceof Error) {
-      throw new BadRequestException(user.message);
-    }
+  @Post('sign-in')
+  public async signIn(
+    @Body(new ValidationBodyPipe<ISignData>(signSchema)) data: ISignData,
+  ): Promise<IAccessToken> {
+    try {
+      return await this.authService.signIn(data);
+    } catch (error) {
+      if (error instanceof PrismaClientError) {
+        throw new UnauthorizedException(error.message);
+      }
 
-    return user;
+      if (error instanceof InvalidPassword) {
+        throw new UnauthorizedException(error.message);
+      }
+
+      throw error;
+    }
   }
 }

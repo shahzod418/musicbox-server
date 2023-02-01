@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 
 import { FileType, RoleType } from '@interfaces/file';
 
+import type { IFile } from '@interfaces/file';
 import type { ReadStream } from 'fs';
 
 @Injectable()
@@ -14,20 +15,19 @@ export class FileService {
     id: number,
     role: RoleType,
     type: FileType,
-    file: Express.Multer.File,
+    file: IFile,
   ): Promise<void> {
     const dirPath = this.getDirPath(id, role, type);
 
     try {
       await access(dirPath);
     } catch {
-      await mkdir(dirPath);
+      await mkdir(dirPath, { recursive: true });
     }
 
-    await writeFile(
-      this.getFilePath(id, role, type, file.originalname),
-      file.buffer,
-    );
+    const { name, data } = file;
+
+    await writeFile(this.getFilePath(id, role, type, name), data);
   }
 
   public createAudioStream(
@@ -69,26 +69,43 @@ export class FileService {
     id: number,
     role: RoleType,
     type: FileType,
-    currentFile: Express.Multer.File,
+    currentFile: IFile,
     previousFilename?: string,
   ): Promise<void> {
-    if (previousFilename) {
-      await rm(this.getFilePath(id, role, type, previousFilename));
+    const dirPath = this.getDirPath(id, role, type);
+
+    try {
+      await access(dirPath);
+    } catch {
+      await mkdir(dirPath, { recursive: true });
     }
 
-    await writeFile(
-      this.getFilePath(id, role, type, currentFile.originalname),
-      currentFile.buffer,
-    );
+    if (previousFilename) {
+      const filePath = this.getFilePath(id, role, type, previousFilename);
+
+      try {
+        await access(filePath);
+        await rm(filePath);
+      } catch {}
+    }
+
+    const { name, data } = currentFile;
+
+    await writeFile(this.getFilePath(id, role, type, name), data);
   }
 
-  public removeFile(
+  public async removeFile(
     id: number,
     role: RoleType,
     type: FileType,
     filename: string,
   ): Promise<void> {
-    return rm(this.getFilePath(id, role, type, filename));
+    const filePath = this.getFilePath(id, role, type, filename);
+
+    try {
+      await access(filePath);
+      await rm(filePath);
+    } catch {}
   }
 
   public removeResources(id: number, role: RoleType): Promise<void> {

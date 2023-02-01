@@ -31,9 +31,9 @@ export class ArtistProfileService {
     const artist = await this.prisma.artist.create({
       data: {
         ...payload,
+        ...(avatar && { avatar: avatar.name }),
+        ...(cover && { cover: cover.name }),
         userId,
-        ...(avatar && { avatar: avatar.originalname }),
-        ...(cover && { cover: cover.originalname }),
       },
       select: {
         id: true,
@@ -65,12 +65,9 @@ export class ArtistProfileService {
     return artist;
   }
 
-  public async findOne(artistId: number, userId: number): Promise<IArtist> {
+  public async findOne(artistId: number): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
-      where: {
-        id: artistId,
-        userId,
-      },
+      where: { id: artistId },
       select: {
         id: true,
         name: true,
@@ -101,16 +98,8 @@ export class ArtistProfileService {
     const artist = await this.prisma.artist.update({
       data: {
         ...data,
-        ...(avatar && {
-          avatar: {
-            set: avatar.originalname,
-          },
-        }),
-        ...(cover && {
-          cover: {
-            set: cover.originalname,
-          },
-        }),
+        ...(avatar && { avatar: { set: avatar.name } }),
+        ...(cover && { cover: { set: cover.name } }),
       },
       where: { id: artistId },
       select: {
@@ -152,13 +141,13 @@ export class ArtistProfileService {
         status: { set: Status.DELETED },
         albums: {
           updateMany: {
-            where: { artistId },
+            where: {},
             data: { status: { set: Status.DELETED } },
           },
         },
         songs: {
           updateMany: {
-            where: { artistId },
+            where: {},
             data: { status: { set: Status.DELETED } },
           },
         },

@@ -8,14 +8,14 @@ import type { Prisma, User } from '@prisma/client';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  public create(
+  public async create(
     data: Pick<Prisma.UserCreateInput, 'email' | 'hash' | 'name'>,
   ): Promise<User> {
-    return this.prisma.user.create({ data });
+    return await this.prisma.user.create({ data });
   }
 
-  public findOne(email: string): Promise<User> {
-    return this.prisma.user.findFirstOrThrow({ where: { email } });
+  public async findOne(email: string): Promise<User> {
+    return await this.prisma.user.findFirstOrThrow({ where: { email } });
   }
 
   public async isUnique(email: string): Promise<boolean> {

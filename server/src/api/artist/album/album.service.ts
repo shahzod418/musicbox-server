@@ -12,6 +12,7 @@ import type {
   ISong,
   IUpdateAlbum,
 } from './album.interface';
+import type { IFile } from '@interfaces/file';
 import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
@@ -21,21 +22,14 @@ export class ArtistAlbumService {
     private readonly file: FileService,
   ) {}
 
-  public async create(
-    data: ICreateAlbum,
-    cover?: Express.Multer.File,
-  ): Promise<IAlbum> {
+  public async create(data: ICreateAlbum, cover?: IFile): Promise<IAlbum> {
     const { artistId, ...payload } = data;
 
     const album = await this.prisma.album.create({
       data: {
         ...payload,
-        ...(cover && { cover: cover.originalname }),
-        artist: {
-          connect: {
-            id: artistId,
-          },
-        },
+        ...(cover && { cover: cover.name }),
+        artist: { connect: { id: artistId } },
       },
       select: {
         id: true,
@@ -64,12 +58,9 @@ export class ArtistAlbumService {
     });
   }
 
-  public async findOne(
-    albumId: number,
-    artistId: number,
-  ): Promise<IAlbum & ISong> {
+  public async findOne(albumId: number): Promise<IAlbum & ISong> {
     return await this.prisma.album.findFirstOrThrow({
-      where: { id: albumId, artistId },
+      where: { id: albumId },
       select: {
         id: true,
         name: true,
@@ -88,7 +79,7 @@ export class ArtistAlbumService {
   public async update(
     albumId: number,
     data: IUpdateAlbum,
-    cover?: Express.Multer.File,
+    cover?: IFile,
   ): Promise<IAlbum> {
     const { artistId, cover: previousCover } =
       await this.prisma.album.findFirstOrThrow({
@@ -102,18 +93,10 @@ export class ArtistAlbumService {
     const album = await this.prisma.album.update({
       data: {
         ...data,
-        ...(cover && {
-          cover: {
-            set: cover.originalname,
-          },
-        }),
-        status: {
-          set: Status.REVIEW,
-        },
+        ...(cover && { cover: { set: cover.name } }),
+        status: { set: Status.REVIEW },
       },
-      where: {
-        id: albumId,
-      },
+      where: { id: albumId },
       select: {
         id: true,
         name: true,
@@ -137,14 +120,8 @@ export class ArtistAlbumService {
 
   public async remove(albumId: number): Promise<ISuccess> {
     await this.prisma.album.update({
-      data: {
-        status: {
-          set: Status.DELETED,
-        },
-      },
-      where: {
-        id: albumId,
-      },
+      data: { status: { set: Status.DELETED } },
+      where: { id: albumId },
     });
 
     return { success: true };
@@ -152,16 +129,8 @@ export class ArtistAlbumService {
 
   public async addSong(albumId: number, songId: number): Promise<ISuccess> {
     await this.prisma.album.update({
-      data: {
-        songs: {
-          connect: {
-            id: songId,
-          },
-        },
-      },
-      where: {
-        id: albumId,
-      },
+      data: { songs: { connect: { id: songId } } },
+      where: { id: albumId },
     });
 
     return { success: true };
@@ -169,16 +138,8 @@ export class ArtistAlbumService {
 
   public async removeSong(albumId: number, songId: number): Promise<ISuccess> {
     await this.prisma.album.update({
-      data: {
-        songs: {
-          disconnect: {
-            id: songId,
-          },
-        },
-      },
-      where: {
-        id: albumId,
-      },
+      data: { songs: { disconnect: { id: songId } } },
+      where: { id: albumId },
     });
 
     return { success: true };

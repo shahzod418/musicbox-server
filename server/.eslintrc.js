@@ -28,24 +28,23 @@ module.exports = {
       {
         pathGroups: [
           {
-            pattern: '@root/**',
+            pattern: '@api/**',
             group: 'parent',
-            position: 'before',
+          },
+          {
+            pattern: '@app/**',
+            group: 'parent',
           },
           {
             pattern: '@database/**',
             group: 'parent',
           },
           {
-            pattern: '@libraries/**',
+            pattern: '@decorators/**',
             group: 'parent',
           },
           {
-            pattern: '@services/**',
-            group: 'parent',
-          },
-          {
-            pattern: '@helpers/**',
+            pattern: '@errors/**',
             group: 'parent',
           },
           {
@@ -53,11 +52,15 @@ module.exports = {
             group: 'parent',
           },
           {
+            pattern: '@jwt/**',
+            group: 'parent',
+          },
+          {
             pattern: '@pipes/**',
             group: 'parent',
           },
           {
-            pattern: '@errors/**',
+            pattern: '@services/**',
             group: 'parent',
           },
           {

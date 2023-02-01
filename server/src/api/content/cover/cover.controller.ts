@@ -9,13 +9,14 @@ import {
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
+import { NotFoundError } from '@errors/not-found';
 import { PrismaClientError } from '@errors/prisma';
 
-import { CoverService } from './cover.service';
+import { ContentCoverService } from './cover.service';
 
-@Controller('api')
-export class CoverController {
-  constructor(private readonly coverService: CoverService) {}
+@Controller('api/content')
+export class ContentCoverController {
+  constructor(private readonly contentCoverService: ContentCoverService) {}
 
   @Get('songs/:songId/cover')
   @Header('Content-Type', 'image/jpeg')
@@ -23,12 +24,19 @@ export class CoverController {
     @Param('songId', ParseIntPipe) songId: number,
   ): Promise<StreamableFile> {
     try {
-      const file = await this.coverService.getSongCover(songId, Role.ADMIN);
+      const file = await this.contentCoverService.getSongCover(
+        songId,
+        Role.ADMIN,
+      );
 
       return new StreamableFile(file);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof NotFoundError) {
+        throw new BadRequestException(error.message);
       }
 
       throw error;
@@ -41,12 +49,19 @@ export class CoverController {
     @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<StreamableFile> {
     try {
-      const file = await this.coverService.getAlbumCover(albumId, Role.ADMIN);
+      const file = await this.contentCoverService.getAlbumCover(
+        albumId,
+        Role.ADMIN,
+      );
 
       return new StreamableFile(file);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof NotFoundError) {
+        throw new BadRequestException(error.message);
       }
 
       throw error;
@@ -59,12 +74,19 @@ export class CoverController {
     @Param('artistId', ParseIntPipe) artistId: number,
   ): Promise<StreamableFile> {
     try {
-      const file = await this.coverService.getArtistCover(artistId, Role.ADMIN);
+      const file = await this.contentCoverService.getArtistCover(
+        artistId,
+        Role.ADMIN,
+      );
 
       return new StreamableFile(file);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof NotFoundError) {
+        throw new BadRequestException(error.message);
       }
 
       throw error;
@@ -77,12 +99,16 @@ export class CoverController {
     @Param('playlistId', ParseIntPipe) playlistId: number,
   ): Promise<StreamableFile> {
     try {
-      const file = await this.coverService.getPlaylistCover(playlistId);
+      const file = await this.contentCoverService.getPlaylistCover(playlistId);
 
       return new StreamableFile(file);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof NotFoundError) {
+        throw new BadRequestException(error.message);
       }
 
       throw error;

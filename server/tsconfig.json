@@ -19,13 +19,16 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
     "paths": {
-      "@database/*": ["./src/database/*"],
       "@api/*": ["./src/api/*"],
-      "@interfaces/*": ["./src/interfaces/*"],
-      "@services/*": ["./src/services/*"],
-      "@guards/*": ["./src/guards/*"],
+      "@app/*": ["./src/app/*"],
+      "@database/*": ["./src/database/*"],
+      "@decorators/*": ["./src/decorators/*"],
       "@errors/*": ["./src/errors/*"],
-      "@pipes/*": ["./src/pipes/*"]
+      "@guards/*": ["./src/guards/*"],
+      "@interfaces/*": ["./src/interfaces/*"],
+      "@jwt/*": ["./src/jwt/*"],
+      "@pipes/*": ["./src/pipes/*"],
+      "@services/*": ["./src/services/*"]
     }
   }
 }

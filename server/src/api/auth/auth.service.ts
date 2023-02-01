@@ -1,49 +1,54 @@
 import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
 
-import { PrismaService } from '@database/prisma.service';
+import { InvalidPassword, UserAlreadyExists } from '@errors/auth';
 import { UserService } from '@services/user/user.service';
 
-import type { Prisma, User } from '@prisma/client';
+import type { IAccessToken, ISignData, IUser } from './auth.interface';
+import type { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly user: UserService,
+    private readonly jwt: JwtService,
   ) {}
 
-  public async signUp(
-    data: Pick<Prisma.UserCreateInput, 'email' | 'name'> & { password: string },
-  ): Promise<User | Error> {
+  public async signUp(data: ISignData): Promise<IUser> {
+    const { email, password } = data;
+
     const isUniqueUser = await this.user.isUnique(data.email);
     if (!isUniqueUser) {
-      return new Error('User already exists');
+      throw new UserAlreadyExists();
     }
-
-    const { password, ...payload } = data;
 
     const hashPassword = await hash(password, 10);
 
-    return await this.user.create({ ...payload, hash: hashPassword });
+    const { id } = await this.user.create({ email, hash: hashPassword });
+
+    return { id, email };
   }
 
-  public async signIn(
-    data: Pick<User, 'email'> & { password: string },
-  ): Promise<User | Error> {
+  public async signIn(data: ISignData): Promise<IAccessToken> {
     const { email, password } = data;
 
-    try {
-      const user = await this.user.findOne(email);
+    const user = await this.user.findOne(email);
 
-      const isValidPassword = await compare(password, user.hash);
+    const isValidPassword = await compare(password, user.hash);
 
-      if (!isValidPassword) {
-        return new Error('Incorrect password');
-      }
+    if (!isValidPassword) {
+      throw new InvalidPassword();
+    }
 
-      return user;
-    } catch {}
-    return new Error('User not found');
+    return await this.getJwt(user);
+  }
+
+  private async getJwt({ id, role }: User): Promise<IAccessToken> {
+    const payload = { id, role };
+
+    return {
+      access_token: await this.jwt.signAsync(payload),
+    };
   }
 }

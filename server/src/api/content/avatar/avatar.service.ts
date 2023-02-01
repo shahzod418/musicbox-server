@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@database/prisma.service';
+import { NotFoundError } from '@errors/not-found';
 import { FileService } from '@services/file/file.service';
 
 import { FileType, RoleType } from '@interfaces/file';
 
 @Injectable()
-export class AvatarService {
+export class ContentAvatarService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -14,11 +15,15 @@ export class AvatarService {
 
   public async getUserAvatar(userId: number): Promise<Buffer> {
     const { avatar } = await this.prisma.user.findFirstOrThrow({
-      where: {
-        id: userId,
+      where: { id: userId },
+      select: {
+        avatar: true,
       },
-      select: { avatar: true },
     });
+
+    if (!avatar) {
+      throw new NotFoundError(FileType.Avatar);
+    }
 
     return await this.file.getFile(
       userId,
@@ -30,15 +35,19 @@ export class AvatarService {
 
   public async getArtistAvatar(artistId: number): Promise<Buffer> {
     const { avatar } = await this.prisma.artist.findFirstOrThrow({
-      where: {
-        id: artistId,
+      where: { id: artistId },
+      select: {
+        avatar: true,
       },
-      select: { avatar: true },
     });
+
+    if (!avatar) {
+      throw new NotFoundError(FileType.Avatar);
+    }
 
     return await this.file.getFile(
       artistId,
-      RoleType.User,
+      RoleType.Artist,
       FileType.Avatar,
       avatar,
     );

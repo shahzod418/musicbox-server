@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Status } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
 
@@ -11,13 +12,29 @@ export class UserAlbumService {
 
   public async findAll(userId: number): Promise<IAlbum[]> {
     const { albums } = await this.prisma.user.findFirstOrThrow({
-      where: {
-        id: userId,
-      },
+      where: { id: userId },
       select: {
         albums: {
+          where: {
+            album: {
+              OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
+            },
+          },
           select: {
-            album: true,
+            album: {
+              select: {
+                id: true,
+                name: true,
+                cover: true,
+                status: true,
+                artist: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -27,19 +44,10 @@ export class UserAlbumService {
   }
 
   public async addAlbum(userId: number, albumId: number): Promise<ISuccess> {
-    await this.prisma.user.update({
+    await this.prisma.userAlbum.create({
       data: {
-        albums: {
-          connect: {
-            userId_albumId: {
-              userId,
-              albumId,
-            },
-          },
-        },
-      },
-      where: {
-        id: userId,
+        user: { connect: { id: userId } },
+        album: { connect: { id: albumId } },
       },
     });
 
@@ -47,20 +55,8 @@ export class UserAlbumService {
   }
 
   public async removeAlbum(userId: number, albumId: number): Promise<ISuccess> {
-    await this.prisma.user.update({
-      data: {
-        albums: {
-          disconnect: {
-            userId_albumId: {
-              userId,
-              albumId,
-            },
-          },
-        },
-      },
-      where: {
-        id: userId,
-      },
+    await this.prisma.userAlbum.delete({
+      where: { userId_albumId: { userId, albumId } },
     });
 
     return { success: true };

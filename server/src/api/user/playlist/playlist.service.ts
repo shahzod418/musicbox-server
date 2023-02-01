@@ -8,12 +8,44 @@ import { FileType, RoleType } from '@interfaces/file';
 import type {
   ICreatePlaylist,
   IPlaylist,
+  ISong,
   IUpdatePlaylist,
 } from './playlist.interface';
+import type { IFile } from '@interfaces/file';
 import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class UserPlaylistService {
+  private readonly songsSelect = {
+    songs: {
+      select: {
+        song: {
+          select: {
+            song: {
+              select: {
+                id: true,
+                name: true,
+                text: true,
+                listens: true,
+                explicit: true,
+                cover: true,
+                audio: true,
+                status: true,
+                albumId: true,
+                artist: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -21,14 +53,14 @@ export class UserPlaylistService {
 
   public async create(
     data: ICreatePlaylist,
-    cover?: Express.Multer.File,
+    cover?: IFile,
   ): Promise<IPlaylist> {
     const { userId, ...payload } = data;
 
     const playlist = await this.prisma.playlist.create({
       data: {
         ...payload,
-        ...(cover && { cover: cover.originalname }),
+        ...(cover && { cover: cover.name }),
         user: { connect: { id: userId } },
       },
       select: {
@@ -56,61 +88,66 @@ export class UserPlaylistService {
     });
   }
 
-  public async findOne(playlistId: number, userId: number): Promise<IPlaylist> {
-    return await this.prisma.playlist.findFirstOrThrow({
+  public async findOne(
+    playlistId: number,
+    userId: number,
+  ): Promise<IPlaylist & { songs: ISong[] }> {
+    const { songs, ...playlist } = await this.prisma.playlist.findFirstOrThrow({
       where: { id: playlistId, userId },
       select: {
         id: true,
         name: true,
         cover: true,
-        songs: {
-          select: {
-            song: {
-              select: {
-                id: true,
-                name: true,
-                explicit: true,
-                cover: true,
-                audio: true,
-                artistId: true,
-                albumId: true,
-                artist: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+        ...this.songsSelect,
       },
     });
+
+    return {
+      ...playlist,
+      songs: songs.map(({ song: { song } }) => song),
+    };
   }
 
   public async update(
     playlistId: number,
     payload: IUpdatePlaylist,
-    cover?: Express.Multer.File,
-  ): Promise<IPlaylist> {
-    const playlist = await this.prisma.playlist.update({
+    cover?: IFile,
+  ): Promise<IPlaylist & { songs: ISong[] }> {
+    const { cover: previousCover } =
+      await this.prisma.playlist.findFirstOrThrow({
+        where: { id: playlistId },
+        select: { cover: true },
+      });
+
+    const { userId, songs, ...playlist } = await this.prisma.playlist.update({
       data: {
         ...payload,
-        ...(cover && { cover: { set: cover.originalname } }),
+        ...(cover && { cover: { set: cover.name } }),
       },
       where: { id: playlistId },
+      select: {
+        id: true,
+        name: true,
+        cover: true,
+        userId: true,
+        ...this.songsSelect,
+      },
     });
 
     if (cover) {
-      await this.file.addFile(
-        playlist.userId,
+      await this.file.updateFile(
+        userId,
         RoleType.User,
         FileType.Cover,
         cover,
+        previousCover,
       );
     }
 
-    return playlist;
+    return {
+      ...playlist,
+      songs: songs.map(({ song: { song } }) => song),
+    };
   }
 
   public async delete(playlistId: number): Promise<ISuccess> {
@@ -123,50 +160,33 @@ export class UserPlaylistService {
       await this.file.removeFile(userId, RoleType.User, FileType.Cover, cover);
     }
 
-    return { success: false };
+    return { success: true };
   }
 
   public async addSong(
     playlistId: number,
     userId: number,
     songId: number,
-  ): Promise<IPlaylist> {
-    return await this.prisma.playlist.update({
+  ): Promise<ISuccess> {
+    await this.prisma.playlistSong.create({
       data: {
-        songs: {
-          connect: {
-            userId_songId: {
-              userId,
-              songId,
-            },
-          },
-        },
-      },
-      where: {
-        id: playlistId,
+        song: { connect: { userId_songId: { userId, songId } } },
+        playlist: { connect: { id: playlistId } },
       },
     });
+
+    return { success: true };
   }
 
   public async deleteSong(
     playlistId: number,
     userId: number,
     songId: number,
-  ): Promise<IPlaylist> {
-    return await this.prisma.playlist.update({
-      data: {
-        songs: {
-          disconnect: {
-            userId_songId: {
-              userId,
-              songId,
-            },
-          },
-        },
-      },
-      where: {
-        id: playlistId,
-      },
+  ): Promise<ISuccess> {
+    await this.prisma.playlistSong.delete({
+      where: { userId_songId_playlistId: { userId, songId, playlistId } },
     });
+
+    return { success: true };
   }
 }

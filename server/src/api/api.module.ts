@@ -5,7 +5,6 @@ import { ArtistModule } from './artist/artist.module';
 import { AuthModule } from './auth/auth.module';
 import { ContentModule } from './content/content.module';
 import { ManagerModule } from './manager/manager.module';
-import { MusicModule } from './music/music.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -15,7 +14,6 @@ import { UserModule } from './user/user.module';
     AuthModule,
     ContentModule,
     ManagerModule,
-    MusicModule,
     UserModule,
   ],
 })

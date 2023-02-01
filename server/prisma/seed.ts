@@ -240,17 +240,43 @@ async function main(): Promise<void> {
         connect: { id: 1 },
       },
       songs: {
-        connect: [
+        connectOrCreate: [
           {
-            userId_songId: {
-              userId: 1,
-              songId: 1,
+            where: {
+              userId_songId_playlistId: {
+                userId: 1,
+                songId: 1,
+                playlistId: 1,
+              },
+            },
+            create: {
+              song: {
+                connect: {
+                  userId_songId: {
+                    userId: 1,
+                    songId: 1,
+                  },
+                },
+              },
             },
           },
           {
-            userId_songId: {
-              userId: 1,
-              songId: 2,
+            where: {
+              userId_songId_playlistId: {
+                userId: 1,
+                songId: 2,
+                playlistId: 1,
+              },
+            },
+            create: {
+              song: {
+                connect: {
+                  userId_songId: {
+                    userId: 1,
+                    songId: 2,
+                  },
+                },
+              },
             },
           },
         ],

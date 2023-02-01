@@ -1,3 +1,4 @@
+import type { IFile } from '@interfaces/file';
 import type { Artist, Prisma } from '@prisma/client';
 
 export type IArtist = Omit<Artist, 'userId'>;
@@ -15,6 +16,6 @@ export type IUpdateArtist = Pick<
 >;
 
 export type IArtistFiles = {
-  avatar?: Express.Multer.File;
-  cover?: Express.Multer.File;
+  avatar?: IFile;
+  cover?: IFile;
 };

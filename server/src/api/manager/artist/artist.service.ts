@@ -41,14 +41,8 @@ export class ManagerArtistService {
   public async approve(artistId: number): Promise<ISuccess> {
     await this.prisma.artist.update({
       data: {
-        status: {
-          set: Status.APPROVED,
-        },
-        user: {
-          update: {
-            role: Role.ARTIST,
-          },
-        },
+        status: { set: Status.APPROVED },
+        user: { update: { role: Role.ARTIST } },
       },
       where: { id: artistId },
     });
@@ -59,31 +53,17 @@ export class ManagerArtistService {
   public async decline(artistId: number): Promise<ISuccess> {
     await this.prisma.artist.update({
       data: {
-        status: {
-          set: Status.DECLINED,
-        },
+        status: { set: Status.DECLINED },
         songs: {
           updateMany: {
-            data: {
-              status: {
-                set: Status.DECLINED,
-              },
-            },
-            where: {
-              artistId,
-            },
+            data: { status: { set: Status.DECLINED } },
+            where: { artistId },
           },
         },
         albums: {
           updateMany: {
-            data: {
-              status: {
-                set: Status.DECLINED,
-              },
-            },
-            where: {
-              artistId,
-            },
+            data: { status: { set: Status.DECLINED } },
+            where: { artistId },
           },
         },
       },

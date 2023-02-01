@@ -8,3 +8,5 @@ export enum RoleType {
   Artist = 'artist',
   User = 'user',
 }
+
+export type IFile = { data: Buffer; name: string };
