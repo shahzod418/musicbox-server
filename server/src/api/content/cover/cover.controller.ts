@@ -6,11 +6,15 @@ import {
   Param,
   ParseIntPipe,
   StreamableFile,
+  UseGuards,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
+import { UserId, UserRole } from '@decorators/users.decorator';
 import { NotFoundError } from '@errors/not-found';
 import { PrismaClientError } from '@errors/prisma';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '@guards/optional-jwt-auth.guard';
 
 import { ContentCoverService } from './cover.service';
 
@@ -18,15 +22,19 @@ import { ContentCoverService } from './cover.service';
 export class ContentCoverController {
   constructor(private readonly contentCoverService: ContentCoverService) {}
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('songs/:songId/cover')
   @Header('Content-Type', 'image/jpeg')
   public async getSongCover(
     @Param('songId', ParseIntPipe) songId: number,
+    @UserId() userId?: number,
+    @UserRole() role?: Role,
   ): Promise<StreamableFile> {
     try {
       const file = await this.contentCoverService.getSongCover(
         songId,
-        Role.ADMIN,
+        role,
+        userId,
       );
 
       return new StreamableFile(file);
@@ -43,15 +51,19 @@ export class ContentCoverController {
     }
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('albums/:albumId/cover')
   @Header('Content-Type', 'image/jpeg')
   public async getAlbumCover(
     @Param('albumId', ParseIntPipe) albumId: number,
+    @UserId() userId?: number,
+    @UserRole() role?: Role,
   ): Promise<StreamableFile> {
     try {
       const file = await this.contentCoverService.getAlbumCover(
         albumId,
-        Role.ADMIN,
+        role,
+        userId,
       );
 
       return new StreamableFile(file);
@@ -68,15 +80,19 @@ export class ContentCoverController {
     }
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('artists/:artistId/cover')
   @Header('Content-Type', 'image/jpeg')
   public async getArtistCover(
     @Param('artistId', ParseIntPipe) artistId: number,
+    @UserId() userId?: number,
+    @UserRole() role?: Role,
   ): Promise<StreamableFile> {
     try {
       const file = await this.contentCoverService.getArtistCover(
         artistId,
-        Role.ADMIN,
+        role,
+        userId,
       );
 
       return new StreamableFile(file);
@@ -93,13 +109,18 @@ export class ContentCoverController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('playlists/:playlistId/cover')
   @Header('Content-Type', 'image/jpeg')
   public async getPlaylistCover(
     @Param('playlistId', ParseIntPipe) playlistId: number,
+    @UserId() userId: number,
   ): Promise<StreamableFile> {
     try {
-      const file = await this.contentCoverService.getPlaylistCover(playlistId);
+      const file = await this.contentCoverService.getPlaylistCover(
+        playlistId,
+        userId,
+      );
 
       return new StreamableFile(file);
     } catch (error) {

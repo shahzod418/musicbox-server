@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Role, Status } from '@prisma/client';
 
+import { getContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 import { NotFoundError } from '@errors/not-found';
 import { FileService } from '@services/file/file.service';
 
 import { FileType, RoleType } from '@interfaces/file';
 
-import type { ReadStream } from 'fs';
+import type { IAudioStream } from './audio.interface';
+import type { Role } from '@prisma/client';
 
 @Injectable()
 export class ContentAudioService {
@@ -18,22 +19,12 @@ export class ContentAudioService {
 
   public async getAudio(
     songId: number,
-    role: Role,
     range?: string,
-  ): Promise<{
-    stream: ReadStream;
-    size: number;
-    start?: number;
-    end?: number;
-  }> {
+    role?: Role,
+    userId?: number,
+  ): Promise<IAudioStream> {
     const { artistId, audio } = await this.prisma.song.findFirstOrThrow({
-      where: {
-        id: songId,
-        ...(role === Role.USER && {
-          OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-        }),
-        ...(role === Role.MANAGER && { status: Status.REVIEW }),
-      },
+      where: { id: songId, ...getContentWhere(role, userId) },
       select: {
         artistId: true,
         audio: true,

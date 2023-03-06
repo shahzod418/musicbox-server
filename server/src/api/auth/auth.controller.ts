@@ -48,7 +48,7 @@ export class AuthController {
       return await this.authService.signIn(data);
     } catch (error) {
       if (error instanceof PrismaClientError) {
-        throw new UnauthorizedException(error.message);
+        throw new BadRequestException(error.message);
       }
 
       if (error instanceof InvalidPassword) {

@@ -6,10 +6,10 @@ import {
   Get,
   ParseIntPipe,
   Put,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 
+import { UserId } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
@@ -24,9 +24,7 @@ export class UserAlbumController {
   constructor(private readonly userAlbumService: UserAlbumService) {}
 
   @Get()
-  public async findAll(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<IAlbum[]> {
+  public async findAll(@UserId() userId: number): Promise<IAlbum[]> {
     try {
       return await this.userAlbumService.findAll(userId);
     } catch (error) {
@@ -40,7 +38,7 @@ export class UserAlbumController {
 
   @Put()
   public async addAlbum(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
     @Body('albumId', ParseIntPipe) albumId: number,
   ): Promise<ISuccess> {
     try {
@@ -59,7 +57,7 @@ export class UserAlbumController {
 
   @Delete()
   public async removeAlbum(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
     @Body('albumId', ParseIntPipe) albumId: number,
   ): Promise<ISuccess> {
     try {

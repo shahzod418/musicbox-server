@@ -8,12 +8,15 @@ import {
   Param,
   ParseIntPipe,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Response } from 'express';
 
+import { UserId, UserRole } from '@decorators/users.decorator';
 import { NotFoundError } from '@errors/not-found';
 import { PrismaClientError } from '@errors/prisma';
+import { OptionalJwtAuthGuard } from '@guards/optional-jwt-auth.guard';
 
 import { ContentAudioService } from './audio.service';
 
@@ -21,6 +24,7 @@ import { ContentAudioService } from './audio.service';
 export class ContentAudioController {
   constructor(private readonly contentAudioService: ContentAudioService) {}
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('songs/:songId/audio')
   @Header('Accept-Ranges', 'bytes')
   @Header('Content-Type', 'audio/mpeg')
@@ -28,10 +32,12 @@ export class ContentAudioController {
     @Res() res: Response,
     @Headers('range') range: string | undefined,
     @Param('songId', ParseIntPipe) songId: number,
+    @UserId() userId?: number,
+    @UserRole() role?: Role,
   ): Promise<void> {
     try {
       const { stream, size, start, end } =
-        await this.contentAudioService.getAudio(songId, Role.ADMIN, range);
+        await this.contentAudioService.getAudio(songId, range, role, userId);
 
       if (range) {
         const chunksize = end - start + 1;

@@ -6,10 +6,15 @@ import {
   Param,
   ParseIntPipe,
   StreamableFile,
+  UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
+import { UserId, UserRole } from '@decorators/users.decorator';
 import { NotFoundError } from '@errors/not-found';
 import { PrismaClientError } from '@errors/prisma';
+import { JwtAuthGuard } from '@guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '@guards/optional-jwt-auth.guard';
 
 import { ContentAvatarService } from './avatar.service';
 
@@ -17,10 +22,11 @@ import { ContentAvatarService } from './avatar.service';
 export class ContentAvatarController {
   constructor(private readonly contentAvatarService: ContentAvatarService) {}
 
-  @Get('users/:userId/avatar')
+  @UseGuards(JwtAuthGuard)
+  @Get('users/avatar')
   @Header('Content-Type', 'image/jpeg')
   public async getUserAvatar(
-    @Param('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
   ): Promise<StreamableFile> {
     try {
       const file = await this.contentAvatarService.getUserAvatar(userId);
@@ -28,7 +34,7 @@ export class ContentAvatarController {
       return new StreamableFile(file);
     } catch (error) {
       if (error instanceof PrismaClientError) {
-        throw new BadRequestException(error.meta.cause);
+        throw new BadRequestException(error.message);
       }
 
       if (error instanceof NotFoundError) {
@@ -39,18 +45,25 @@ export class ContentAvatarController {
     }
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('artists/:artistId/avatar')
   @Header('Content-Type', 'image/jpeg')
   public async getArtistAvatar(
     @Param('artistId', ParseIntPipe) artistId: number,
+    @UserId() userId?: number,
+    @UserRole() role?: Role,
   ): Promise<StreamableFile> {
     try {
-      const file = await this.contentAvatarService.getArtistAvatar(artistId);
+      const file = await this.contentAvatarService.getArtistAvatar(
+        artistId,
+        role,
+        userId,
+      );
 
       return new StreamableFile(file);
     } catch (error) {
       if (error instanceof PrismaClientError) {
-        throw new BadRequestException(error.meta.cause);
+        throw new BadRequestException(error.message);
       }
 
       if (error instanceof NotFoundError) {

@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
 
+import { getContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 
 import type { IAlbum, ISong } from './album.interface';
+import type { Role } from '@prisma/client';
 
 @Injectable()
 export class ContentAlbumService {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async findAll(): Promise<IAlbum[]> {
+  public async findAll(role?: Role, userId?: number): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
-      where: {
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-      },
+      where: getContentWhere(role, userId),
       select: {
         id: true,
         name: true,
@@ -29,11 +28,15 @@ export class ContentAlbumService {
     });
   }
 
-  public async findOne(albumId: number): Promise<IAlbum & { songs: ISong[] }> {
+  public async findOne(
+    albumId: number,
+    role?: Role,
+    userId?: number,
+  ): Promise<IAlbum & { songs: ISong[] }> {
     return await this.prisma.album.findFirstOrThrow({
       where: {
         id: albumId,
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
+        ...getContentWhere(role, userId),
       },
       select: {
         id: true,
@@ -47,9 +50,7 @@ export class ContentAlbumService {
           },
         },
         songs: {
-          where: {
-            OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-          },
+          where: getContentWhere(role, userId),
           select: {
             id: true,
             name: true,

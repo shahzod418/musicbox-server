@@ -1,20 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
 
+import {
+  getArtistContentWhere,
+  getContentWhere,
+} from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 
 import type { IAlbum, IArtist, ISong } from './artist.interface';
 import type { IShortArtist } from '@interfaces/artist';
+import type { Role } from '@prisma/client';
 
 @Injectable()
 export class ContentArtistService {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async findAll(): Promise<IArtist[]> {
+  public async findAll(role?: Role, userId?: number): Promise<IArtist[]> {
     return await this.prisma.artist.findMany({
-      where: {
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-      },
+      where: getArtistContentWhere(role, userId),
       select: {
         id: true,
         name: true,
@@ -26,12 +28,13 @@ export class ContentArtistService {
     });
   }
 
-  public async findOne(artistId: number): Promise<IArtist> {
+  public async findOne(
+    artistId: number,
+    role?: Role,
+    userId?: number,
+  ): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
-      where: {
-        id: artistId,
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-      },
+      where: { id: artistId, ...getArtistContentWhere(role, userId) },
       select: {
         id: true,
         name: true,
@@ -43,12 +46,13 @@ export class ContentArtistService {
     });
   }
 
-  public async findAllAlbum(artistId: number): Promise<IAlbum[]> {
+  public async findAllAlbum(
+    artistId: number,
+    role?: Role,
+    userId?: number,
+  ): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
-      where: {
-        artistId,
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-      },
+      where: { artistId, ...getContentWhere(role, userId) },
       select: {
         id: true,
         name: true,
@@ -60,12 +64,11 @@ export class ContentArtistService {
 
   public async findOneAlbum(
     albumId: number,
+    role?: Role,
+    userId?: number,
   ): Promise<IAlbum & IShortArtist & { songs: ISong[] }> {
     return await this.prisma.album.findFirstOrThrow({
-      where: {
-        id: albumId,
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-      },
+      where: { id: albumId, ...getContentWhere(role, userId) },
       select: {
         id: true,
         name: true,
@@ -78,9 +81,7 @@ export class ContentArtistService {
           },
         },
         songs: {
-          where: {
-            OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-          },
+          where: getContentWhere(role, userId),
           select: {
             id: true,
             name: true,
@@ -96,12 +97,13 @@ export class ContentArtistService {
     });
   }
 
-  public async findAllSong(artistId: number): Promise<ISong[]> {
+  public async findAllSong(
+    artistId: number,
+    role?: Role,
+    userId?: number,
+  ): Promise<ISong[]> {
     return await this.prisma.song.findMany({
-      where: {
-        artistId,
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-      },
+      where: { artistId, ...getContentWhere(role, userId) },
       select: {
         id: true,
         name: true,

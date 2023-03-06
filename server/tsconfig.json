@@ -21,6 +21,7 @@
     "paths": {
       "@api/*": ["./src/api/*"],
       "@app/*": ["./src/app/*"],
+      "@constants/*": ["./src/constants/*"],
       "@database/*": ["./src/database/*"],
       "@decorators/*": ["./src/decorators/*"],
       "@errors/*": ["./src/errors/*"],

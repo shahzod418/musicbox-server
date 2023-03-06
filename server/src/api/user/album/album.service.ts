@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
+import { Role } from '@prisma/client';
 
+import { getContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 
 import type { IAlbum } from './album.interface';
@@ -16,9 +17,7 @@ export class UserAlbumService {
       select: {
         albums: {
           where: {
-            album: {
-              OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-            },
+            album: getContentWhere(Role.USER),
           },
           select: {
             album: {

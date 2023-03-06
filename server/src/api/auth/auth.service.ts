@@ -44,11 +44,13 @@ export class AuthService {
     return await this.getJwt(user);
   }
 
-  private async getJwt({ id, role }: User): Promise<IAccessToken> {
-    const payload = { id, role };
+  private async getJwt(
+    payload: Pick<User, 'id' | 'role'>,
+  ): Promise<IAccessToken> {
+    const { id, role } = payload;
 
     return {
-      access_token: await this.jwt.signAsync(payload),
+      access_token: await this.jwt.signAsync({ id, role }),
     };
   }
 }

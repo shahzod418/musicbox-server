@@ -36,6 +36,10 @@ module.exports = {
             group: 'parent',
           },
           {
+            pattern: '@constants/**',
+            group: 'parent',
+          },
+          {
             pattern: '@database/**',
             group: 'parent',
           },
