@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
+import { getContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 
 import type { IArtist } from './artist.interface';
@@ -7,6 +9,20 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class UserArtistService {
+  private readonly artistSelect = {
+    select: {
+      artist: {
+        select: {
+          id: true,
+          name: true,
+          cover: true,
+          description: true,
+          status: true,
+        },
+      },
+    },
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
   public async findAll(userId: number): Promise<IArtist[]> {
@@ -14,17 +30,8 @@ export class UserArtistService {
       where: { id: userId },
       select: {
         artists: {
-          select: {
-            artist: {
-              select: {
-                id: true,
-                name: true,
-                cover: true,
-                description: true,
-                status: true,
-              },
-            },
-          },
+          ...this.artistSelect,
+          where: getContentWhere(Role.User),
         },
       },
     });

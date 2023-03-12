@@ -20,7 +20,7 @@ import type { ISuccess } from '@interfaces/response';
 import { ManagerArtistService } from './artist.service';
 
 @UseGuards(RolesGuard)
-@Roles(Role.MANAGER)
+@Roles(Role.Manager)
 @UseGuards(JwtAuthGuard)
 @Controller('api/manager/artists')
 export class ManagerArtistController {

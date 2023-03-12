@@ -12,7 +12,7 @@ import { UserId, UserRole } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { OptionalJwtAuthGuard } from '@guards/optional-jwt-auth.guard';
 
-import type { IAlbum, IArtist, ISong } from './artist.interface';
+import type { IAlbum, IArtist, IArtistShort, ISong } from './artist.interface';
 import type { IShortArtist } from '@interfaces/artist';
 
 import { ContentArtistService } from './artist.service';
@@ -26,7 +26,7 @@ export class ContentArtistController {
   public async findAll(
     @UserId() userId?: number,
     @UserRole() role?: Role,
-  ): Promise<IArtist[]> {
+  ): Promise<IArtistShort[]> {
     try {
       return await this.contentArtistService.findAll(role, userId);
     } catch (error) {

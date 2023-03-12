@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto';
-import { parse } from 'path';
 
 import { Injectable } from '@nestjs/common';
 import sharp from 'sharp';

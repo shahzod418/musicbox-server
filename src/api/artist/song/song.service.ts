@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
+import { Role, Status } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   ICreateSong,
@@ -17,6 +17,16 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class ArtistSongService {
+  private readonly songSelect = {
+    id: true,
+    name: true,
+    text: true,
+    listens: true,
+    explicit: true,
+    status: true,
+    cover: true,
+  };
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -37,32 +47,28 @@ export class ArtistSongService {
         artist: { connect: { id: artistId } },
         audio: audio.name,
       },
-      select: {
-        id: true,
-        name: true,
-        text: true,
-        listens: true,
-        explicit: true,
-        status: true,
-        cover: true,
-      },
+      select: this.songSelect,
     });
 
     if (cover) {
-      await this.file.addFile(
-        Number(artistId),
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+      const addCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        file: cover,
+      };
+
+      await this.file.addFile(addCoverArgs);
     }
 
-    await this.file.addFile(
-      Number(artistId),
-      RoleType.Artist,
-      FileType.Audio,
-      audio,
-    );
+    const addAudioArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Audio,
+      file: audio,
+    };
+
+    await this.file.addFile(addAudioArgs);
 
     return song;
   }
@@ -70,30 +76,14 @@ export class ArtistSongService {
   public async findAll(artistId: number): Promise<ISong[]> {
     return await this.prisma.song.findMany({
       where: { artistId },
-      select: {
-        id: true,
-        name: true,
-        text: true,
-        listens: true,
-        explicit: true,
-        status: true,
-        cover: true,
-      },
+      select: this.songSelect,
     });
   }
 
   public async findOne(songId: number): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
       where: { id: songId },
-      select: {
-        id: true,
-        name: true,
-        text: true,
-        listens: true,
-        explicit: true,
-        status: true,
-        cover: true,
-      },
+      select: this.songSelect,
     });
   }
 
@@ -111,11 +101,7 @@ export class ArtistSongService {
       cover: previousCover,
     } = await this.prisma.song.findFirstOrThrow({
       where: { id: songId },
-      select: {
-        artistId: true,
-        audio: true,
-        cover: true,
-      },
+      select: { artistId: true, audio: true, cover: true },
     });
 
     const song = await this.prisma.song.update({
@@ -124,38 +110,34 @@ export class ArtistSongService {
         ...(albumId && { album: { connect: { id: albumId } } }),
         ...(audio && { audio: { set: audio.name } }),
         ...(cover && { cover: { set: cover.name } }),
-        status: { set: Status.REVIEW },
+        status: { set: Status.Review },
       },
       where: { id: songId },
-      select: {
-        id: true,
-        name: true,
-        text: true,
-        listens: true,
-        explicit: true,
-        status: true,
-        cover: true,
-      },
+      select: this.songSelect,
     });
 
     if (cover) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-        previousCover,
-      );
+      const updateCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        currentFile: cover,
+        previousFilename: previousCover,
+      };
+
+      await this.file.updateFile(updateCoverArgs);
     }
 
     if (audio) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Audio,
-        audio,
-        previousAudio,
-      );
+      const updateAudioArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Audio,
+        currentFile: audio,
+        previousFilename: previousAudio,
+      };
+
+      await this.file.updateFile(updateAudioArgs);
     }
 
     return song;
@@ -163,7 +145,7 @@ export class ArtistSongService {
 
   public async remove(songId: number): Promise<ISuccess> {
     await this.prisma.song.update({
-      data: { status: { set: Status.DELETED } },
+      data: { status: { set: Status.Deleted } },
       where: { id: songId },
     });
 

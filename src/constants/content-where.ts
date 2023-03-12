@@ -7,21 +7,22 @@ export const getContentWhere = (
   userId?: number,
 ): Prisma.SongWhereInput | Prisma.AlbumWhereInput => {
   switch (role) {
-    case 'ADMIN':
+    case 'Admin':
       return {};
-    case 'MANAGER':
-      return { status: Status.REVIEW };
-    case 'ARTIST':
+    case 'Manager':
+      return { status: Status.Review };
+    case 'Artist':
       return {
         OR: [
-          { status: Status.APPROVED },
-          { status: Status.DELETED },
+          { status: Status.Approved },
+          { status: Status.Deleted },
           { artist: { userId } },
         ],
       };
+    case 'User':
     default:
       return {
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
+        OR: [{ status: Status.Approved }, { status: Status.Deleted }],
       };
   }
 };
@@ -31,21 +32,22 @@ export const getArtistContentWhere = (
   userId?: number,
 ): Prisma.ArtistWhereInput => {
   switch (role) {
-    case 'ADMIN':
+    case 'Admin':
       return {};
-    case 'MANAGER':
-      return { status: Status.REVIEW };
-    case 'ARTIST':
+    case 'Manager':
+      return { status: Status.Review };
+    case 'Artist':
       return {
         OR: [
-          { status: Status.APPROVED },
-          { status: Status.DELETED },
+          { status: Status.Approved },
+          { status: Status.Deleted },
           { userId },
         ],
       };
+    case 'User':
     default:
       return {
-        OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
+        OR: [{ status: Status.Approved }, { status: Status.Deleted }],
       };
   }
 };

@@ -30,7 +30,7 @@ export class ContentSongService {
   public async findAll(role?: Role, userId?: number): Promise<ISong[]> {
     return await this.prisma.song.findMany({
       where: getContentWhere(role, userId),
-      select: { ...this.songSelect },
+      select: this.songSelect,
     });
   }
 
@@ -41,7 +41,7 @@ export class ContentSongService {
   ): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
       where: { id: songId, ...getContentWhere(role, userId) },
-      select: { ...this.songSelect },
+      select: this.songSelect,
     });
   }
 

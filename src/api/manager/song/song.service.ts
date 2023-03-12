@@ -8,51 +8,35 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class ManagerSongService {
+  private readonly songSelect = {
+    id: true,
+    name: true,
+    text: true,
+    explicit: true,
+    albumId: true,
+    cover: true,
+    artist: { select: { id: true, name: true } },
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
   public async findAll(artistId: number): Promise<ISong[]> {
     return await this.prisma.song.findMany({
-      where: { artistId, status: Status.REVIEW },
-      select: {
-        id: true,
-        name: true,
-        text: true,
-        explicit: true,
-        albumId: true,
-        cover: true,
-        artist: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      where: { artistId, status: Status.Review },
+      select: this.songSelect,
     });
   }
 
   public async findOne(songId: number): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, status: Status.REVIEW },
-      select: {
-        id: true,
-        name: true,
-        text: true,
-        explicit: true,
-        albumId: true,
-        cover: true,
-        artist: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      where: { id: songId, status: Status.Review },
+      select: this.songSelect,
     });
   }
 
   public async approve(songId: number): Promise<ISuccess> {
     await this.prisma.song.update({
-      data: { status: { set: Status.APPROVED } },
+      data: { status: { set: Status.Approved } },
       where: { id: songId },
     });
 
@@ -61,7 +45,7 @@ export class ManagerSongService {
 
   public async decline(songId: number): Promise<ISuccess> {
     await this.prisma.song.update({
-      data: { status: { set: Status.DECLINED } },
+      data: { status: { set: Status.Declined } },
       where: { id: songId },
     });
 

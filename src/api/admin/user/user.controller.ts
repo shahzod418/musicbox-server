@@ -31,7 +31,7 @@ import { AdminUserService } from './user.service';
 import { createUserSchema, updateUserSchema } from './user.validation';
 
 @UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.Admin)
 @UseGuards(JwtAuthGuard)
 @Controller('api/admin/users')
 export class AdminUserController {

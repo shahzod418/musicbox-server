@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
+import { Role } from '@prisma/client';
 
+import { getContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 
 import type { ISong } from './song.interface';
@@ -8,6 +9,24 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class UserSongService {
+  private readonly songSelect = {
+    select: {
+      song: {
+        select: {
+          id: true,
+          name: true,
+          text: true,
+          listens: true,
+          explicit: true,
+          cover: true,
+          status: true,
+          albumId: true,
+          artist: { select: { id: true, name: true } },
+        },
+      },
+    },
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
   public async findAll(userId: number): Promise<ISong[]> {
@@ -15,31 +34,8 @@ export class UserSongService {
       where: { id: userId },
       select: {
         songs: {
-          where: {
-            song: {
-              OR: [{ status: Status.APPROVED }, { status: Status.DELETED }],
-            },
-          },
-          select: {
-            song: {
-              select: {
-                id: true,
-                name: true,
-                text: true,
-                listens: true,
-                explicit: true,
-                cover: true,
-                status: true,
-                albumId: true,
-                artist: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
+          ...this.songSelect,
+          where: { song: getContentWhere(Role.User) },
         },
       },
     });

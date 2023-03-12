@@ -33,7 +33,7 @@ import { AdminArtistService } from './artist.service';
 import { createArtistSchema, updateArtistSchema } from './artist.validation';
 
 @UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.Admin)
 @UseGuards(JwtAuthGuard)
 @Controller('api/admin/artists')
 export class AdminArtistController {

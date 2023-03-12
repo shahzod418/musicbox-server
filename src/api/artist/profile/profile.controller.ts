@@ -36,7 +36,7 @@ import { ArtistProfileService } from './profile.service';
 import { createArtistSchema, updateArtistSchema } from './profile.validation';
 
 @UseGuards(RolesGuard)
-@Roles(Role.ARTIST)
+@Roles(Role.Artist)
 @UseGuards(JwtAuthGuard)
 @Controller('api/artist/profile')
 export class ArtistProfileController {

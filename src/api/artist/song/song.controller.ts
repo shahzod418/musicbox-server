@@ -38,7 +38,7 @@ import { ArtistSongService } from './song.service';
 import { createSongSchema, updateSongSchema } from './song.validation';
 
 @UseGuards(RolesGuard)
-@Roles(Role.ARTIST)
+@Roles(Role.Artist)
 @UseGuards(JwtAuthGuard)
 @Controller('api/artist/songs')
 export class ArtistSongController {

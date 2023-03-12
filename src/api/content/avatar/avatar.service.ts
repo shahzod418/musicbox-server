@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 import { getArtistContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 import { NotFoundError } from '@errors/not-found';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
-
-import type { Role } from '@prisma/client';
+import { FileType } from '@interfaces/file';
 
 @Injectable()
 export class ContentAvatarService {
@@ -19,21 +18,21 @@ export class ContentAvatarService {
   public async getUserAvatar(userId: number): Promise<Buffer> {
     const { avatar } = await this.prisma.user.findFirstOrThrow({
       where: { id: userId },
-      select: {
-        avatar: true,
-      },
+      select: { avatar: true },
     });
 
     if (!avatar) {
       throw new NotFoundError(FileType.Avatar);
     }
 
-    return await this.file.getFile(
-      userId,
-      RoleType.User,
-      FileType.Avatar,
-      avatar,
-    );
+    const getAvatarArgs = {
+      id: userId,
+      role: Role.User,
+      type: FileType.Avatar,
+      filename: avatar,
+    };
+
+    return await this.file.getFile(getAvatarArgs);
   }
 
   public async getArtistAvatar(
@@ -43,20 +42,20 @@ export class ContentAvatarService {
   ): Promise<Buffer> {
     const { avatar } = await this.prisma.artist.findFirstOrThrow({
       where: { id: artistId, ...getArtistContentWhere(role, userId) },
-      select: {
-        avatar: true,
-      },
+      select: { avatar: true },
     });
 
     if (!avatar) {
       throw new NotFoundError(FileType.Avatar);
     }
 
-    return await this.file.getFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Avatar,
-      avatar,
-    );
+    const getAvatarArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Avatar,
+      filename: avatar,
+    };
+
+    return await this.file.getFile(getAvatarArgs);
   }
 }

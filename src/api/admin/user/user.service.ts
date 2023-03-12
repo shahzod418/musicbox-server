@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { hash } from 'bcrypt';
 
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   ICreateUser,
@@ -41,18 +42,25 @@ export class AdminUserService {
         ...(avatar && { avatar: avatar.name }),
         hash: hashPassword,
       },
-      select: { ...this.userSelect },
+      select: this.userSelect,
     });
 
     if (avatar) {
-      await this.file.addFile(user.id, RoleType.User, FileType.Avatar, avatar);
+      const addAvatarArgs = {
+        id: user.id,
+        role: Role.User,
+        type: FileType.Avatar,
+        file: avatar,
+      };
+
+      await this.file.addFile(addAvatarArgs);
     }
 
     return user;
   }
 
   public async findAll(): Promise<IUser[]> {
-    return await this.prisma.user.findMany({ select: { ...this.userSelect } });
+    return await this.prisma.user.findMany({ select: this.userSelect });
   }
 
   public async update(
@@ -77,17 +85,19 @@ export class AdminUserService {
         ...(avatar && { avatar: { set: avatar.name } }),
       },
       where: { id: userId },
-      select: { ...this.userSelect },
+      select: this.userSelect,
     });
 
     if (avatar) {
-      await this.file.updateFile(
-        userId,
-        RoleType.User,
-        FileType.Avatar,
-        avatar,
-        previousAvatar,
-      );
+      const updateAvatarArgs = {
+        id: userId,
+        role: Role.User,
+        type: FileType.Avatar,
+        currentFile: avatar,
+        previousFilename: previousAvatar,
+      };
+
+      await this.file.updateFile(updateAvatarArgs);
     }
 
     return user;
@@ -100,9 +110,9 @@ export class AdminUserService {
     });
 
     if (artist) {
-      await this.file.removeResources(artist.id, RoleType.Artist);
+      await this.file.removeResources(artist.id, Role.Artist);
     }
-    await this.file.removeResources(userId, RoleType.User);
+    await this.file.removeResources(userId, Role.User);
 
     return { success: true };
   }
@@ -119,12 +129,14 @@ export class AdminUserService {
         data: { avatar: { set: null } },
       });
 
-      await this.file.removeFile(
-        userId,
-        RoleType.User,
-        FileType.Avatar,
-        avatar,
-      );
+      const removeAvatarArgs = {
+        id: userId,
+        role: Role.User,
+        type: FileType.Avatar,
+        filename: avatar,
+      };
+
+      await this.file.removeFile(removeAvatarArgs);
     }
 
     return { success: true };

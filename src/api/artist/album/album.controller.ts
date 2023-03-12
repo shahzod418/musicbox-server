@@ -33,7 +33,7 @@ import { ArtistAlbumService } from './album.service';
 import { createAlbumSchema, updateAlbumSchema } from './album.validation';
 
 @UseGuards(RolesGuard)
-@Roles(Role.ARTIST)
+@Roles(Role.Artist)
 @UseGuards(JwtAuthGuard)
 @Controller('api/artist/albums')
 export class ArtistAlbumController {

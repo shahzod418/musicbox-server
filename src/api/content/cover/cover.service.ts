@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 import {
   getArtistContentWhere,
@@ -8,9 +9,7 @@ import { PrismaService } from '@database/prisma.service';
 import { NotFoundError } from '@errors/not-found';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
-
-import type { Role } from '@prisma/client';
+import { FileType } from '@interfaces/file';
 
 @Injectable()
 export class ContentCoverService {
@@ -26,22 +25,21 @@ export class ContentCoverService {
   ): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.song.findFirstOrThrow({
       where: { id: songId, ...getContentWhere(role, userId) },
-      select: {
-        artistId: true,
-        cover: true,
-      },
+      select: { artistId: true, cover: true },
     });
 
     if (!cover) {
       throw new NotFoundError(FileType.Cover);
     }
 
-    return await this.file.getFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Cover,
-      cover,
-    );
+    const getCoverArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Cover,
+      filename: cover,
+    };
+
+    return await this.file.getFile(getCoverArgs);
   }
 
   public async getAlbumCover(
@@ -51,22 +49,21 @@ export class ContentCoverService {
   ): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.album.findFirstOrThrow({
       where: { id: albumId, ...getContentWhere(role, userId) },
-      select: {
-        artistId: true,
-        cover: true,
-      },
+      select: { artistId: true, cover: true },
     });
 
     if (!cover) {
       throw new NotFoundError(FileType.Cover);
     }
 
-    return await this.file.getFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Cover,
-      cover,
-    );
+    const getCoverArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Cover,
+      filename: cover,
+    };
+
+    return await this.file.getFile(getCoverArgs);
   }
 
   public async getArtistCover(
@@ -76,21 +73,21 @@ export class ContentCoverService {
   ): Promise<Buffer> {
     const { cover } = await this.prisma.artist.findFirstOrThrow({
       where: { id: artistId, ...getArtistContentWhere(role, userId) },
-      select: {
-        cover: true,
-      },
+      select: { cover: true },
     });
 
     if (!cover) {
       throw new NotFoundError(FileType.Cover);
     }
 
-    return await this.file.getFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Cover,
-      cover,
-    );
+    const getCoverArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Cover,
+      filename: cover,
+    };
+
+    return await this.file.getFile(getCoverArgs);
   }
 
   public async getPlaylistCover(
@@ -99,20 +96,20 @@ export class ContentCoverService {
   ): Promise<Buffer> {
     const { cover } = await this.prisma.playlist.findFirstOrThrow({
       where: { id: playlistId, userId },
-      select: {
-        cover: true,
-      },
+      select: { cover: true },
     });
 
     if (!cover) {
       throw new NotFoundError(FileType.Cover);
     }
 
-    return await this.file.getFile(
-      playlistId,
-      RoleType.User,
-      FileType.Cover,
-      cover,
-    );
+    const getCoverArgs = {
+      id: playlistId,
+      role: Role.User,
+      type: FileType.Cover,
+      filename: cover,
+    };
+
+    return await this.file.getFile(getCoverArgs);
   }
 }

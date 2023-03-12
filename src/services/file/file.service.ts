@@ -3,21 +3,28 @@ import { access, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
-import type { IFile } from '@interfaces/file';
+import type {
+  IAddFileArgs,
+  ICreateAudioStreamArgs,
+  IGetDirPathArgs,
+  IGetFileArgs,
+  IGetFilePathArgs,
+  IGetSizeArgs,
+  IRemoveFileArgs,
+  IUpdateFileArgs,
+} from '@interfaces/file';
 import type { ReadStream } from 'fs';
 
 @Injectable()
 export class FileService {
-  public async addFile(
-    id: number,
-    role: RoleType,
-    type: FileType,
-    file: IFile,
-  ): Promise<void> {
-    const dirPath = this.getDirPath(id, role, type);
+  public async addFile(args: IAddFileArgs): Promise<void> {
+    const { id, role, type, file } = args;
+
+    const dirPath = this.getDirPath({ id, role, type });
 
     try {
       await access(dirPath);
@@ -27,52 +34,36 @@ export class FileService {
 
     const { name, data } = file;
 
-    await writeFile(this.getFilePath(id, role, type, name), data);
+    await writeFile(this.getFilePath({ id, role, type, filename: name }), data);
   }
 
-  public createAudioStream(
-    id: number,
-    filename: string,
-    start?: number,
-    end?: number,
-  ): ReadStream {
-    return createReadStream(
-      this.getFilePath(id, RoleType.Artist, FileType.Audio, filename),
-      {
-        start,
-        end,
-      },
-    );
+  public createAudioStream(args: ICreateAudioStreamArgs): ReadStream {
+    const { id, filename, start, end } = args;
+
+    const getFilePathArgs = {
+      id,
+      filename,
+      role: Role.Artist,
+      type: FileType.Audio,
+    };
+
+    return createReadStream(this.getFilePath(getFilePathArgs), { start, end });
   }
 
-  public getFile(
-    id: number,
-    role: RoleType,
-    type: FileType,
-    filename: string,
-  ): Promise<Buffer> {
-    return readFile(this.getFilePath(id, role, type, filename));
+  public getFile(args: IGetFileArgs): Promise<Buffer> {
+    return readFile(this.getFilePath(args));
   }
 
-  public async getSize(
-    id: number,
-    role: RoleType,
-    type: FileType,
-    filename: string,
-  ): Promise<number> {
-    const { size } = await stat(this.getFilePath(id, role, type, filename));
+  public async getSize(args: IGetSizeArgs): Promise<number> {
+    const { size } = await stat(this.getFilePath(args));
 
     return size;
   }
 
-  public async updateFile(
-    id: number,
-    role: RoleType,
-    type: FileType,
-    currentFile: IFile,
-    previousFilename?: string,
-  ): Promise<void> {
-    const dirPath = this.getDirPath(id, role, type);
+  public async updateFile(args: IUpdateFileArgs): Promise<void> {
+    const { id, role, type, currentFile, previousFilename } = args;
+
+    const dirPath = this.getDirPath({ id, role, type });
 
     try {
       await access(dirPath);
@@ -81,7 +72,12 @@ export class FileService {
     }
 
     if (previousFilename) {
-      const filePath = this.getFilePath(id, role, type, previousFilename);
+      const filePath = this.getFilePath({
+        id,
+        role,
+        type,
+        filename: previousFilename,
+      });
 
       try {
         await access(filePath);
@@ -91,16 +87,11 @@ export class FileService {
 
     const { name, data } = currentFile;
 
-    await writeFile(this.getFilePath(id, role, type, name), data);
+    await writeFile(this.getFilePath({ id, role, type, filename: name }), data);
   }
 
-  public async removeFile(
-    id: number,
-    role: RoleType,
-    type: FileType,
-    filename: string,
-  ): Promise<void> {
-    const filePath = this.getFilePath(id, role, type, filename);
+  public async removeFile(args: IRemoveFileArgs): Promise<void> {
+    const filePath = this.getFilePath(args);
 
     try {
       await access(filePath);
@@ -108,27 +99,26 @@ export class FileService {
     } catch {}
   }
 
-  public removeResources(id: number, role: RoleType): Promise<void> {
+  public removeResources(id: number, role: Role): Promise<void> {
     return rm(this.getResourcesDirPath(id, role), {
       recursive: true,
       force: true,
     });
   }
 
-  private getDirPath(id: number, role: RoleType, type: FileType): string {
+  private getDirPath(args: IGetDirPathArgs): string {
+    const { id, role, type } = args;
+
     return resolve('resources', `${role}${id}`, type);
   }
 
-  private getFilePath(
-    id: number,
-    role: RoleType,
-    type: FileType,
-    filename: string,
-  ): string {
+  private getFilePath(args: IGetFilePathArgs): string {
+    const { id, role, type, filename } = args;
+
     return resolve('resources', `${role}${id}`, type, filename);
   }
 
-  private getResourcesDirPath(id: number, role: RoleType): string {
+  private getResourcesDirPath(id: number, role: Role): string {
     return resolve('resources', `${role}${id}`);
   }
 }

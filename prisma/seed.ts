@@ -26,7 +26,7 @@ async function main(): Promise<void> {
     update: {},
     create: {
       email: 'admin@musicbox.test',
-      role: Role.ADMIN,
+      role: Role.Admin,
       hash: '$2b$10$HiwZ/mSy5MclVeic/Hqbe.xBoosypUXFT2V1MLDiNIgDo5s7rKZha',
     },
   });
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
     update: {},
     create: {
       email: 'artist@musicbox.test',
-      role: Role.ARTIST,
+      role: Role.Artist,
       hash: '$2b$10$HiwZ/mSy5MclVeic/Hqbe.xBoosypUXFT2V1MLDiNIgDo5s7rKZha',
     },
   });
@@ -46,7 +46,7 @@ async function main(): Promise<void> {
     update: {},
     create: {
       email: 'manager@musicbox.test',
-      role: Role.MANAGER,
+      role: Role.Manager,
       hash: '$2b$10$HiwZ/mSy5MclVeic/Hqbe.xBoosypUXFT2V1MLDiNIgDo5s7rKZha',
     },
   });
@@ -56,7 +56,7 @@ async function main(): Promise<void> {
     update: {},
     create: {
       name: 'Test artist',
-      status: Status.APPROVED,
+      status: Status.Approved,
       user: {
         connect: { id: 4 },
       },
@@ -85,7 +85,7 @@ async function main(): Promise<void> {
     update: {},
     create: {
       name: 'Test album 1',
-      status: Status.APPROVED,
+      status: Status.Approved,
       artist: {
         connect: { id: 1 },
       },
@@ -113,7 +113,7 @@ async function main(): Promise<void> {
     create: {
       name: 'Test song 1',
       audio: 'test1.mp3',
-      status: Status.APPROVED,
+      status: Status.Approved,
       artist: {
         connect: { id: 1 },
       },
@@ -144,7 +144,7 @@ async function main(): Promise<void> {
     create: {
       name: 'Test song 2',
       audio: 'test2.mp3',
-      status: Status.APPROVED,
+      status: Status.Approved,
       artist: {
         connect: { id: 1 },
       },
@@ -204,7 +204,7 @@ async function main(): Promise<void> {
       name: 'Test song 4',
       audio: 'test4.mp3',
       explicit: true,
-      status: Status.DELETED,
+      status: Status.Deleted,
       artist: {
         connect: { id: 1 },
       },
@@ -221,7 +221,7 @@ async function main(): Promise<void> {
       name: 'Test song 5',
       audio: 'test5.mp3',
       explicit: true,
-      status: Status.DECLINED,
+      status: Status.Declined,
       artist: {
         connect: { id: 1 },
       },

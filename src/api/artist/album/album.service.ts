@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
+import { Role, Status } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   IAlbum,
@@ -17,6 +17,13 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class ArtistAlbumService {
+  private readonly albumSelect = {
+    id: true,
+    name: true,
+    cover: true,
+    status: true,
+  };
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -31,16 +38,18 @@ export class ArtistAlbumService {
         ...(cover && { cover: cover.name }),
         artist: { connect: { id: artistId } },
       },
-      select: {
-        id: true,
-        name: true,
-        cover: true,
-        status: true,
-      },
+      select: this.albumSelect,
     });
 
     if (cover) {
-      await this.file.addFile(artistId, RoleType.Artist, FileType.Cover, cover);
+      const addCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        file: cover,
+      };
+
+      await this.file.addFile(addCoverArgs);
     }
 
     return album;
@@ -49,12 +58,7 @@ export class ArtistAlbumService {
   public async findAll(artistId: number): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
       where: { artistId },
-      select: {
-        id: true,
-        name: true,
-        cover: true,
-        status: true,
-      },
+      select: this.albumSelect,
     });
   }
 
@@ -62,16 +66,8 @@ export class ArtistAlbumService {
     return await this.prisma.album.findFirstOrThrow({
       where: { id: albumId },
       select: {
-        id: true,
-        name: true,
-        cover: true,
-        status: true,
-        songs: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        ...this.albumSelect,
+        songs: { select: { id: true, name: true } },
       },
     });
   }
@@ -84,35 +80,29 @@ export class ArtistAlbumService {
     const { artistId, cover: previousCover } =
       await this.prisma.album.findFirstOrThrow({
         where: { id: albumId },
-        select: {
-          artistId: true,
-          cover: true,
-        },
+        select: { artistId: true, cover: true },
       });
 
     const album = await this.prisma.album.update({
       data: {
         ...data,
         ...(cover && { cover: { set: cover.name } }),
-        status: { set: Status.REVIEW },
+        status: { set: Status.Review },
       },
       where: { id: albumId },
-      select: {
-        id: true,
-        name: true,
-        cover: true,
-        status: true,
-      },
+      select: this.albumSelect,
     });
 
     if (cover) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-        previousCover,
-      );
+      const updateCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        currentFile: cover,
+        previousFilename: previousCover,
+      };
+
+      await this.file.updateFile(updateCoverArgs);
     }
 
     return album;
@@ -120,7 +110,7 @@ export class ArtistAlbumService {
 
   public async remove(albumId: number): Promise<ISuccess> {
     await this.prisma.album.update({
-      data: { status: { set: Status.DELETED } },
+      data: { status: { set: Status.Deleted } },
       where: { id: albumId },
     });
 

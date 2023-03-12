@@ -31,7 +31,7 @@ import { AdminAlbumService } from './album.service';
 import { createAlbumSchema, updateAlbumSchema } from './album.validation';
 
 @UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.Admin)
 @UseGuards(JwtAuthGuard)
 @Controller('api/admin/albums')
 export class AdminAlbumController {

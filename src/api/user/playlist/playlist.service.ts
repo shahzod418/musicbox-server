@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
+import { getContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   ICreatePlaylist,
@@ -16,29 +18,28 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class UserPlaylistService {
+  private readonly playlistSelect = {
+    id: true,
+    name: true,
+    cover: true,
+  };
+
   private readonly songsSelect = {
-    songs: {
-      select: {
-        song: {
-          select: {
-            song: {
-              select: {
-                id: true,
-                name: true,
-                text: true,
-                listens: true,
-                explicit: true,
-                cover: true,
-                audio: true,
-                status: true,
-                albumId: true,
-                artist: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
+    select: {
+      song: {
+        select: {
+          song: {
+            select: {
+              id: true,
+              name: true,
+              text: true,
+              listens: true,
+              explicit: true,
+              cover: true,
+              audio: true,
+              status: true,
+              albumId: true,
+              artist: { select: { id: true, name: true } },
             },
           },
         },
@@ -63,15 +64,18 @@ export class UserPlaylistService {
         ...(cover && { cover: cover.name }),
         user: { connect: { id: userId } },
       },
-      select: {
-        id: true,
-        name: true,
-        cover: true,
-      },
+      select: this.playlistSelect,
     });
 
     if (cover) {
-      await this.file.addFile(userId, RoleType.User, FileType.Cover, cover);
+      const addCoverArgs = {
+        id: userId,
+        role: Role.User,
+        type: FileType.Cover,
+        file: cover,
+      };
+
+      await this.file.addFile(addCoverArgs);
     }
 
     return playlist;
@@ -80,11 +84,7 @@ export class UserPlaylistService {
   public async findAll(userId: number): Promise<IPlaylist[]> {
     return await this.prisma.playlist.findMany({
       where: { userId },
-      select: {
-        id: true,
-        name: true,
-        cover: true,
-      },
+      select: this.playlistSelect,
     });
   }
 
@@ -95,10 +95,11 @@ export class UserPlaylistService {
     const { songs, ...playlist } = await this.prisma.playlist.findFirstOrThrow({
       where: { id: playlistId, userId },
       select: {
-        id: true,
-        name: true,
-        cover: true,
-        ...this.songsSelect,
+        ...this.playlistSelect,
+        songs: {
+          ...this.songsSelect,
+          where: getContentWhere(Role.User),
+        },
       },
     });
 
@@ -126,22 +127,25 @@ export class UserPlaylistService {
       },
       where: { id: playlistId },
       select: {
-        id: true,
-        name: true,
-        cover: true,
+        ...this.playlistSelect,
+        songs: {
+          ...this.songsSelect,
+          where: getContentWhere(Role.User),
+        },
         userId: true,
-        ...this.songsSelect,
       },
     });
 
     if (cover) {
-      await this.file.updateFile(
-        userId,
-        RoleType.User,
-        FileType.Cover,
-        cover,
-        previousCover,
-      );
+      const updateCoverArgs = {
+        id: userId,
+        role: Role.User,
+        type: FileType.Cover,
+        currentFile: cover,
+        previousFilename: previousCover,
+      };
+
+      await this.file.updateFile(updateCoverArgs);
     }
 
     return {
@@ -157,7 +161,14 @@ export class UserPlaylistService {
     });
 
     if (cover) {
-      await this.file.removeFile(userId, RoleType.User, FileType.Cover, cover);
+      const removeCoverArgs = {
+        id: userId,
+        role: Role.User,
+        type: FileType.Cover,
+        filename: cover,
+      };
+
+      await this.file.removeFile(removeCoverArgs);
     }
 
     return { success: true };

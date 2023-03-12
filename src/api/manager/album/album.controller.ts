@@ -21,7 +21,7 @@ import type { ISuccess } from '@interfaces/response';
 import { ManagerAlbumService } from './album.service';
 
 @UseGuards(RolesGuard)
-@Roles(Role.MANAGER)
+@Roles(Role.Manager)
 @UseGuards(JwtAuthGuard)
 @Controller('api/manager/albums')
 export class ManagerAlbumController {

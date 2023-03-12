@@ -8,41 +8,36 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class ManagerArtistService {
+  private readonly artistSelect = {
+    id: true,
+    name: true,
+    description: true,
+    avatar: true,
+    cover: true,
+    status: true,
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
   public async findAll(): Promise<IArtist[]> {
     return await this.prisma.artist.findMany({
-      where: { status: Status.REVIEW },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        avatar: true,
-        cover: true,
-        status: true,
-      },
+      where: { status: Status.Review },
+      select: this.artistSelect,
     });
   }
 
   public async findOne(artistId: number): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
-      where: { id: artistId, status: Status.REVIEW },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        avatar: true,
-        cover: true,
-        status: true,
-      },
+      where: { id: artistId, status: Status.Review },
+      select: this.artistSelect,
     });
   }
 
   public async approve(artistId: number): Promise<ISuccess> {
     await this.prisma.artist.update({
       data: {
-        status: { set: Status.APPROVED },
-        user: { update: { role: Role.ARTIST } },
+        status: { set: Status.Approved },
+        user: { update: { role: Role.Artist } },
       },
       where: { id: artistId },
     });
@@ -53,16 +48,16 @@ export class ManagerArtistService {
   public async decline(artistId: number): Promise<ISuccess> {
     await this.prisma.artist.update({
       data: {
-        status: { set: Status.DECLINED },
+        status: { set: Status.Declined },
         songs: {
           updateMany: {
-            data: { status: { set: Status.DECLINED } },
+            data: { status: { set: Status.Declined } },
             where: { artistId },
           },
         },
         albums: {
           updateMany: {
-            data: { status: { set: Status.DECLINED } },
+            data: { status: { set: Status.Declined } },
             where: { artistId },
           },
         },

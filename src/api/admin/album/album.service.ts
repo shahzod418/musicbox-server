@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   IAlbum,
@@ -38,11 +39,18 @@ export class AdminAlbumService {
         ...payload,
         artist: { connect: { id: artistId } },
       },
-      select: { ...this.albumSelect },
+      select: this.albumSelect,
     });
 
     if (cover) {
-      await this.file.addFile(artistId, RoleType.Artist, FileType.Cover, cover);
+      const addCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        file: cover,
+      };
+
+      await this.file.addFile(addCoverArgs);
     }
 
     return album;
@@ -51,7 +59,7 @@ export class AdminAlbumService {
   public async findOne(albumId: number): Promise<IAlbum> {
     return await this.prisma.album.findFirstOrThrow({
       where: { id: albumId },
-      select: { ...this.albumSelect },
+      select: this.albumSelect,
     });
   }
 
@@ -74,17 +82,19 @@ export class AdminAlbumService {
         ...(cover && { cover: { set: cover.name } }),
       },
       where: { id: albumId },
-      select: { ...this.albumSelect },
+      select: this.albumSelect,
     });
 
     if (cover) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-        previousCover,
-      );
+      const updateCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        currentFile: cover,
+        previousFilename: previousCover,
+      };
+
+      await this.file.updateFile(updateCoverArgs);
     }
 
     return album;
@@ -96,12 +106,14 @@ export class AdminAlbumService {
       select: { artistId: true, cover: true },
     });
 
-    await this.file.removeFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Cover,
-      cover,
-    );
+    const removeCoverArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Cover,
+      filename: cover,
+    };
+
+    await this.file.removeFile(removeCoverArgs);
 
     return { success: true };
   }
@@ -118,12 +130,14 @@ export class AdminAlbumService {
         data: { cover: { set: null } },
       });
 
-      await this.file.removeFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+      const removeCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        filename: cover,
+      };
+
+      await this.file.removeFile(removeCoverArgs);
     }
 
     return { success: true };

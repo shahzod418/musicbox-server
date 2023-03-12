@@ -4,7 +4,7 @@ import { Role } from '@prisma/client';
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   IAlbum,
@@ -65,30 +65,34 @@ export class AdminArtistService {
         ...payload,
         user: { connect: { id: userId } },
       },
-      select: { ...this.artistSelect },
+      select: this.artistSelect,
     });
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { role: { set: Role.ARTIST } },
+      data: { role: { set: Role.Artist } },
     });
 
     if (avatar) {
-      await this.file.addFile(
-        artist.id,
-        RoleType.Artist,
-        FileType.Avatar,
-        avatar,
-      );
+      const addAvatarArgs = {
+        id: artist.id,
+        role: Role.Artist,
+        type: FileType.Avatar,
+        file: avatar,
+      };
+
+      await this.file.addFile(addAvatarArgs);
     }
 
     if (cover) {
-      await this.file.addFile(
-        artist.id,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+      const addCoverArgs = {
+        id: artist.id,
+        role: Role.Artist,
+        type: FileType.Cover,
+        file: cover,
+      };
+
+      await this.file.addFile(addCoverArgs);
     }
 
     return artist;
@@ -96,21 +100,21 @@ export class AdminArtistService {
 
   public async findAll(): Promise<IArtist[]> {
     return await this.prisma.artist.findMany({
-      select: { ...this.artistSelect },
+      select: this.artistSelect,
     });
   }
 
   public async findOne(artistId: number): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
       where: { id: artistId },
-      select: { ...this.artistSelect },
+      select: this.artistSelect,
     });
   }
 
   public async findAllAlbum(artistId: number): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
       where: { artistId },
-      select: { ...this.albumSelect },
+      select: this.albumSelect,
     });
   }
 
@@ -122,7 +126,7 @@ export class AdminArtistService {
       select: {
         ...this.albumSelect,
         artist: { select: { id: true, name: true } },
-        songs: { select: { ...this.songSelect } },
+        songs: { select: this.songSelect },
       },
     });
   }
@@ -130,7 +134,7 @@ export class AdminArtistService {
   public async findAllSong(artistId: number): Promise<ISong[]> {
     return await this.prisma.song.findMany({
       where: { artistId },
-      select: { ...this.songSelect },
+      select: this.songSelect,
     });
   }
 
@@ -154,27 +158,31 @@ export class AdminArtistService {
         ...(cover && { cover: { set: cover.name } }),
       },
       where: { id: artistId },
-      select: { ...this.artistSelect },
+      select: this.artistSelect,
     });
 
     if (avatar) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Avatar,
-        avatar,
-        previousAvatar,
-      );
+      const updateAvatarArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Avatar,
+        currentFile: avatar,
+        previousFilename: previousAvatar,
+      };
+
+      await this.file.updateFile(updateAvatarArgs);
     }
 
     if (cover) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-        previousCover,
-      );
+      const updateCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        currentFile: cover,
+        previousFilename: previousCover,
+      };
+
+      await this.file.updateFile(updateCoverArgs);
     }
 
     return artist;
@@ -188,10 +196,10 @@ export class AdminArtistService {
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { role: { set: Role.USER } },
+      data: { role: { set: Role.User } },
     });
 
-    await this.file.removeResources(artistId, RoleType.Artist);
+    await this.file.removeResources(artistId, Role.Artist);
 
     return { success: true };
   }
@@ -208,12 +216,14 @@ export class AdminArtistService {
         data: { avatar: { set: null } },
       });
 
-      await this.file.removeFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Avatar,
-        avatar,
-      );
+      const removeAvatarArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Avatar,
+        filename: avatar,
+      };
+
+      await this.file.removeFile(removeAvatarArgs);
     }
 
     return { success: true };
@@ -231,12 +241,14 @@ export class AdminArtistService {
         data: { cover: { set: null } },
       });
 
-      await this.file.removeFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+      const removeCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        filename: cover,
+      };
+
+      await this.file.removeFile(removeCoverArgs);
     }
 
     return { success: true };

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type { IUpdateUser, IUser } from './profile.interface';
 import type { IFile } from '@interfaces/file';
@@ -11,6 +12,13 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class UserProfileService {
+  private readonly profileSelect = {
+    id: true,
+    email: true,
+    name: true,
+    avatar: true,
+  };
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -19,12 +27,7 @@ export class UserProfileService {
   public async findOne(userId: number): Promise<IUser> {
     return await this.prisma.user.findFirstOrThrow({
       where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-      },
+      select: this.profileSelect,
     });
   }
 
@@ -44,22 +47,19 @@ export class UserProfileService {
         ...(avatar && { avatar: { set: avatar.name } }),
       },
       where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-      },
+      select: this.profileSelect,
     });
 
     if (avatar) {
-      await this.file.updateFile(
-        userId,
-        RoleType.User,
-        FileType.Avatar,
-        avatar,
-        previousAvatar,
-      );
+      const updateAvatarArgs = {
+        id: userId,
+        role: Role.User,
+        type: FileType.Avatar,
+        currentFile: avatar,
+        previousFilename: previousAvatar,
+      };
+
+      await this.file.updateFile(updateAvatarArgs);
     }
 
     return user;
@@ -68,9 +68,7 @@ export class UserProfileService {
   public async removeAvatar(userId: number): Promise<ISuccess> {
     const { avatar } = await this.prisma.user.findFirstOrThrow({
       where: { id: userId },
-      select: {
-        avatar: true,
-      },
+      select: { avatar: true },
     });
 
     if (avatar) {
@@ -79,12 +77,14 @@ export class UserProfileService {
         data: { avatar: { set: null } },
       });
 
-      await this.file.removeFile(
-        userId,
-        RoleType.User,
-        FileType.Avatar,
-        avatar,
-      );
+      const removeAvatarArgs = {
+        id: userId,
+        role: Role.User,
+        type: FileType.Avatar,
+        filename: avatar,
+      };
+
+      await this.file.removeFile(removeAvatarArgs);
     }
 
     return { success: true };

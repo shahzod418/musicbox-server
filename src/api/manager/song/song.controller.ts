@@ -23,7 +23,7 @@ import type { ISuccess } from '@interfaces/response';
 import { ManagerSongService } from './song.service';
 
 @UseGuards(RolesGuard)
-@Roles(Role.MANAGER)
+@Roles(Role.Manager)
 @UseGuards(JwtAuthGuard)
 @Controller('api/manager/songs')
 export class ManagerAlbumController {

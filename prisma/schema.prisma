@@ -8,17 +8,17 @@ datasource db {
 }
 
 enum Role {
-  USER
-  ADMIN
-  ARTIST
-  MANAGER
+  User
+  Admin
+  Artist
+  Manager
 }
 
 enum Status {
-  REVIEW
-  DELETED
-  APPROVED
-  DECLINED
+  Review
+  Deleted
+  Approved
+  Declined
 }
 
 model User {
@@ -26,7 +26,7 @@ model User {
   email     String       @unique
   hash      String
   name      String?
-  role      Role         @default(USER)
+  role      Role         @default(User)
   avatar    String?
   songs     UserSong[]
   albums    UserAlbum[]
@@ -71,7 +71,7 @@ model Song {
   explicit Boolean    @default(false)
   cover    String?
   audio    String
-  status   Status     @default(REVIEW)
+  status   Status     @default(Review)
   artist   Artist     @relation(fields: [artistId], references: [id], onDelete: Cascade)
   artistId Int
   album    Album?     @relation(fields: [albumId], references: [id])
@@ -83,7 +83,7 @@ model Album {
   id       Int         @id @default(autoincrement())
   name     String
   cover    String?
-  status   Status      @default(REVIEW)
+  status   Status      @default(Review)
   songs    Song[]
   artist   Artist      @relation(fields: [artistId], references: [id], onDelete: Cascade)
   artistId Int
@@ -96,7 +96,7 @@ model Artist {
   avatar      String?
   cover       String?
   description String?
-  status      Status       @default(REVIEW)
+  status      Status       @default(Review)
   songs       Song[]
   albums      Album[]
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)

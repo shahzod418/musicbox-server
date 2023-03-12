@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   ICreateSong,
@@ -24,12 +25,7 @@ export class AdminSongService {
     explicit: true,
     cover: true,
     status: true,
-    artist: {
-      select: {
-        id: true,
-        name: true,
-      },
-    },
+    artist: { select: { id: true, name: true } },
   };
 
   constructor(
@@ -52,14 +48,28 @@ export class AdminSongService {
         artist: { connect: { id: artistId } },
         audio: audio.name,
       },
-      select: { ...this.songSelect },
+      select: this.songSelect,
     });
 
     if (cover) {
-      await this.file.addFile(artistId, RoleType.Artist, FileType.Cover, cover);
+      const addCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        file: cover,
+      };
+
+      await this.file.addFile(addCoverArgs);
     }
 
-    await this.file.addFile(artistId, RoleType.Artist, FileType.Audio, audio);
+    const addAudioArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Audio,
+      file: audio,
+    };
+
+    await this.file.addFile(addAudioArgs);
 
     return song;
   }
@@ -67,7 +77,7 @@ export class AdminSongService {
   public async findOne(songId: number): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
       where: { id: songId },
-      select: { ...this.songSelect },
+      select: this.songSelect,
     });
   }
 
@@ -96,27 +106,31 @@ export class AdminSongService {
         ...(cover && { cover: { set: cover.name } }),
       },
       where: { id: songId },
-      select: { ...this.songSelect },
+      select: this.songSelect,
     });
 
     if (cover) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-        previousCover,
-      );
+      const updateCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        currentFile: cover,
+        previousFilename: previousCover,
+      };
+
+      await this.file.updateFile(updateCoverArgs);
     }
 
     if (audio) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Audio,
-        audio,
-        previousAudio,
-      );
+      const updateAudioArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Audio,
+        currentFile: audio,
+        previousFilename: previousAudio,
+      };
+
+      await this.file.updateFile(updateAudioArgs);
     }
 
     return song;
@@ -129,20 +143,24 @@ export class AdminSongService {
     });
 
     if (cover) {
-      await this.file.removeFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+      const removeCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        filename: cover,
+      };
+
+      await this.file.removeFile(removeCoverArgs);
     }
 
-    await this.file.removeFile(
-      artistId,
-      RoleType.Artist,
-      FileType.Audio,
-      audio,
-    );
+    const removeAudioArgs = {
+      id: artistId,
+      role: Role.Artist,
+      type: FileType.Audio,
+      filename: audio,
+    };
+
+    await this.file.removeFile(removeAudioArgs);
 
     return { success: true };
   }
@@ -159,12 +177,14 @@ export class AdminSongService {
         data: { cover: { set: null } },
       });
 
-      await this.file.removeFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+      const removeCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        filename: cover,
+      };
+
+      await this.file.removeFile(removeCoverArgs);
     }
 
     return { success: true };

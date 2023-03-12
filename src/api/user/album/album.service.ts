@@ -9,6 +9,20 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class UserAlbumService {
+  private readonly albumSelect = {
+    select: {
+      album: {
+        select: {
+          id: true,
+          name: true,
+          cover: true,
+          status: true,
+          artist: { select: { id: true, name: true } },
+        },
+      },
+    },
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
   public async findAll(userId: number): Promise<IAlbum[]> {
@@ -16,25 +30,8 @@ export class UserAlbumService {
       where: { id: userId },
       select: {
         albums: {
-          where: {
-            album: getContentWhere(Role.USER),
-          },
-          select: {
-            album: {
-              select: {
-                id: true,
-                name: true,
-                cover: true,
-                status: true,
-                artist: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
+          ...this.albumSelect,
+          where: { album: getContentWhere(Role.User) },
         },
       },
     });

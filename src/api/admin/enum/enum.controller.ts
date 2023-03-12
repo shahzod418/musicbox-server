@@ -10,7 +10,7 @@ import type { Status } from '@prisma/client';
 import { AdminEnumService } from './enum.service';
 
 @UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.Admin)
 @UseGuards(JwtAuthGuard)
 @Controller('api/admin/enums')
 export class AdminEnumController {

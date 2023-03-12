@@ -6,25 +6,49 @@ import {
 } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
 
-import type { IAlbum, IArtist, ISong } from './artist.interface';
+import type { IAlbum, IArtist, IArtistShort, ISong } from './artist.interface';
 import type { IShortArtist } from '@interfaces/artist';
 import type { Role } from '@prisma/client';
 
 @Injectable()
 export class ContentArtistService {
+  private readonly artistShortSelect = {
+    id: true,
+    name: true,
+    avatar: true,
+    status: true,
+  };
+
+  private readonly artistSelect = {
+    ...this.artistShortSelect,
+    cover: true,
+    description: true,
+  };
+
+  private readonly albumSelect = {
+    id: true,
+    name: true,
+    cover: true,
+    status: true,
+  };
+
+  private readonly songSelect = {
+    id: true,
+    name: true,
+    text: true,
+    listens: true,
+    explicit: true,
+    cover: true,
+    audio: true,
+    status: true,
+  };
+
   constructor(private readonly prisma: PrismaService) {}
 
-  public async findAll(role?: Role, userId?: number): Promise<IArtist[]> {
+  public async findAll(role?: Role, userId?: number): Promise<IArtistShort[]> {
     return await this.prisma.artist.findMany({
       where: getArtistContentWhere(role, userId),
-      select: {
-        id: true,
-        name: true,
-        avatar: true,
-        cover: true,
-        description: true,
-        status: true,
-      },
+      select: this.artistShortSelect,
     });
   }
 
@@ -35,14 +59,7 @@ export class ContentArtistService {
   ): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
       where: { id: artistId, ...getArtistContentWhere(role, userId) },
-      select: {
-        id: true,
-        name: true,
-        cover: true,
-        avatar: true,
-        description: true,
-        status: true,
-      },
+      select: this.artistSelect,
     });
   }
 
@@ -53,12 +70,7 @@ export class ContentArtistService {
   ): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
       where: { artistId, ...getContentWhere(role, userId) },
-      select: {
-        id: true,
-        name: true,
-        cover: true,
-        status: true,
-      },
+      select: this.albumSelect,
     });
   }
 
@@ -70,28 +82,11 @@ export class ContentArtistService {
     return await this.prisma.album.findFirstOrThrow({
       where: { id: albumId, ...getContentWhere(role, userId) },
       select: {
-        id: true,
-        name: true,
-        cover: true,
-        status: true,
-        artist: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        ...this.albumSelect,
+        artist: { select: { id: true, name: true } },
         songs: {
           where: getContentWhere(role, userId),
-          select: {
-            id: true,
-            name: true,
-            text: true,
-            listens: true,
-            explicit: true,
-            cover: true,
-            audio: true,
-            status: true,
-          },
+          select: this.songSelect,
         },
       },
     });
@@ -104,16 +99,7 @@ export class ContentArtistService {
   ): Promise<ISong[]> {
     return await this.prisma.song.findMany({
       where: { artistId, ...getContentWhere(role, userId) },
-      select: {
-        id: true,
-        name: true,
-        text: true,
-        listens: true,
-        explicit: true,
-        cover: true,
-        audio: true,
-        status: true,
-      },
+      select: this.songSelect,
     });
   }
 }

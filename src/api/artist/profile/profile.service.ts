@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
+import { Role, Status } from '@prisma/client';
 
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
-import { FileType, RoleType } from '@interfaces/file';
+import { FileType } from '@interfaces/file';
 
 import type {
   IArtist,
@@ -16,6 +16,15 @@ import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
 export class ArtistProfileService {
+  private readonly profileSelect = {
+    id: true,
+    name: true,
+    avatar: true,
+    cover: true,
+    description: true,
+    status: true,
+  };
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly file: FileService,
@@ -35,31 +44,28 @@ export class ArtistProfileService {
         ...(cover && { cover: cover.name }),
         userId,
       },
-      select: {
-        id: true,
-        name: true,
-        avatar: true,
-        cover: true,
-        description: true,
-        status: true,
-      },
+      select: this.profileSelect,
     });
 
     if (avatar) {
-      await this.file.addFile(
-        artist.id,
-        RoleType.Artist,
-        FileType.Avatar,
-        avatar,
-      );
+      const addAvatarArgs = {
+        id: artist.id,
+        role: Role.Artist,
+        type: FileType.Avatar,
+        file: avatar,
+      };
+
+      await this.file.addFile(addAvatarArgs);
     }
     if (cover) {
-      await this.file.addFile(
-        artist.id,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-      );
+      const addCoverArgs = {
+        id: artist.id,
+        role: Role.Artist,
+        type: FileType.Cover,
+        file: cover,
+      };
+
+      await this.file.addFile(addCoverArgs);
     }
 
     return artist;
@@ -68,14 +74,7 @@ export class ArtistProfileService {
   public async findOne(artistId: number): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
       where: { id: artistId },
-      select: {
-        id: true,
-        name: true,
-        avatar: true,
-        cover: true,
-        description: true,
-        status: true,
-      },
+      select: this.profileSelect,
     });
   }
 
@@ -89,10 +88,7 @@ export class ArtistProfileService {
     const { avatar: previousAvatar, cover: previousCover } =
       await this.prisma.artist.findUniqueOrThrow({
         where: { id: artistId },
-        select: {
-          avatar: true,
-          cover: true,
-        },
+        select: { avatar: true, cover: true },
       });
 
     const artist = await this.prisma.artist.update({
@@ -102,34 +98,31 @@ export class ArtistProfileService {
         ...(cover && { cover: { set: cover.name } }),
       },
       where: { id: artistId },
-      select: {
-        id: true,
-        name: true,
-        avatar: true,
-        cover: true,
-        description: true,
-        status: true,
-      },
+      select: this.profileSelect,
     });
 
     if (avatar) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Avatar,
-        avatar,
-        previousAvatar,
-      );
+      const updateAvatarArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Avatar,
+        currentFile: avatar,
+        previousFilename: previousAvatar,
+      };
+
+      await this.file.updateFile(updateAvatarArgs);
     }
 
     if (cover) {
-      await this.file.updateFile(
-        artistId,
-        RoleType.Artist,
-        FileType.Cover,
-        cover,
-        previousCover,
-      );
+      const updateCoverArgs = {
+        id: artistId,
+        role: Role.Artist,
+        type: FileType.Cover,
+        currentFile: cover,
+        previousFilename: previousCover,
+      };
+
+      await this.file.updateFile(updateCoverArgs);
     }
 
     return artist;
@@ -138,17 +131,17 @@ export class ArtistProfileService {
   public async remove(artistId: number): Promise<ISuccess> {
     await this.prisma.artist.update({
       data: {
-        status: { set: Status.DELETED },
+        status: { set: Status.Deleted },
         albums: {
           updateMany: {
             where: {},
-            data: { status: { set: Status.DELETED } },
+            data: { status: { set: Status.Deleted } },
           },
         },
         songs: {
           updateMany: {
             where: {},
-            data: { status: { set: Status.DELETED } },
+            data: { status: { set: Status.Deleted } },
           },
         },
       },
