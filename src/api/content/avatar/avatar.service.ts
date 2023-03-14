@@ -37,11 +37,11 @@ export class ContentAvatarService {
 
   public async getArtistAvatar(
     artistId: number,
-    role?: Role,
     userId?: number,
+    role?: Role,
   ): Promise<Buffer> {
     const { avatar } = await this.prisma.artist.findFirstOrThrow({
-      where: { id: artistId, ...getArtistContentWhere(role, userId) },
+      where: { id: artistId, ...getArtistContentWhere(userId, role) },
       select: { avatar: true },
     });
 

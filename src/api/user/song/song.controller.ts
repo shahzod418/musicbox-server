@@ -6,10 +6,11 @@ import {
   Get,
   ParseIntPipe,
   Put,
-  Query,
   UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
+import { UserId, UserRole } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
@@ -25,10 +26,11 @@ export class UserSongController {
 
   @Get()
   public async findAll(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
+    @UserRole() role: Role,
   ): Promise<ISong[]> {
     try {
-      return await this.userSongService.findAll(userId);
+      return await this.userSongService.findAll(userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
@@ -40,10 +42,13 @@ export class UserSongController {
 
   @Put()
   public async addSong(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Body('songId', ParseIntPipe) songId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userSongService.accessSong(userId, songId, role);
+
       return await this.userSongService.addSong(userId, songId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -59,10 +64,13 @@ export class UserSongController {
 
   @Delete()
   public async removeSong(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Body('songId', ParseIntPipe) songId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userSongService.accessSong(userId, songId, role);
+
       return await this.userSongService.removeSong(userId, songId);
     } catch (error) {
       if (error instanceof PrismaClientError) {

@@ -6,10 +6,11 @@ import {
   Get,
   ParseIntPipe,
   Put,
-  Query,
   UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
+import { UserId, UserRole } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
@@ -25,10 +26,11 @@ export class UserArtistController {
 
   @Get()
   public async findAll(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
+    @UserRole() role: Role,
   ): Promise<IArtist[]> {
     try {
-      return await this.userArtistService.findAll(userId);
+      return await this.userArtistService.findAll(userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
@@ -40,10 +42,13 @@ export class UserArtistController {
 
   @Put()
   public async addArtist(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Body('artistId', ParseIntPipe) artistId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userArtistService.accessArtist(userId, artistId, role);
+
       return await this.userArtistService.addArtist(userId, artistId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -59,10 +64,13 @@ export class UserArtistController {
 
   @Delete()
   public async removeArtist(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Body('artistId', ParseIntPipe) artistId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userArtistService.accessArtist(userId, artistId, role);
+
       return await this.userArtistService.removeArtist(userId, artistId);
     } catch (error) {
       if (error instanceof PrismaClientError) {

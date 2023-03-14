@@ -9,13 +9,14 @@ import {
   Patch,
   Post,
   Put,
-  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Role } from '@prisma/client';
 
+import { UserId, UserRole } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { ParseCoverPipe } from '@pipes/parse-cover';
@@ -25,7 +26,7 @@ import type { IPlaylist, ISong } from './playlist.interface';
 import type { IFile } from '@interfaces/file';
 import type { ISuccess } from '@interfaces/response';
 
-import { ICreatePlaylist, IUpdatePlaylist } from './playlist.interface';
+import { ICreatePlaylistBody, IUpdatePlaylist } from './playlist.interface';
 
 import { UserPlaylistService } from './playlist.service';
 import {
@@ -41,12 +42,17 @@ export class UserPlaylistController {
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async create(
-    @Body(new ValidationBodyPipe(createPlaylistSchema)) data: ICreatePlaylist,
+    @UserId() userId: number,
+    @Body(new ValidationBodyPipe(createPlaylistSchema))
+    data: ICreatePlaylistBody,
     @UploadedFiles(new ParseCoverPipe({ optional: true }))
     files: { cover?: IFile },
   ): Promise<IPlaylist> {
     try {
-      return await this.userPlaylistService.create(data, files.cover);
+      return await this.userPlaylistService.create(
+        { ...data, userId },
+        files.cover,
+      );
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
@@ -57,9 +63,7 @@ export class UserPlaylistController {
   }
 
   @Get()
-  public async findAll(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<IPlaylist[]> {
+  public async findAll(@UserId() userId: number): Promise<IPlaylist[]> {
     try {
       return await this.userPlaylistService.findAll(userId);
     } catch (error) {
@@ -73,11 +77,14 @@ export class UserPlaylistController {
 
   @Get(':playlistId')
   public async findOne(
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Param('playlistId', ParseIntPipe) playlistId: number,
-    @Query('userId', ParseIntPipe) userId: number,
   ): Promise<IPlaylist & { songs: ISong[] }> {
     try {
-      return await this.userPlaylistService.findOne(playlistId, userId);
+      await this.userPlaylistService.accessPlaylist(userId, playlistId);
+
+      return await this.userPlaylistService.findOne(playlistId, userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
@@ -90,6 +97,8 @@ export class UserPlaylistController {
   @Patch(':playlistId')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async update(
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Body(new ValidationBodyPipe(updatePlaylistSchema))
     payload: IUpdatePlaylist,
@@ -97,9 +106,11 @@ export class UserPlaylistController {
     files: { cover?: IFile },
   ): Promise<IPlaylist & { songs: ISong[] }> {
     try {
+      await this.userPlaylistService.accessPlaylist(userId, playlistId);
+
       return await this.userPlaylistService.update(
-        playlistId,
-        payload,
+        { userId, role },
+        { playlistId, ...payload },
         files.cover,
       );
     } catch (error) {
@@ -113,9 +124,12 @@ export class UserPlaylistController {
 
   @Delete(':playlistId')
   public async delete(
+    @UserId() userId: number,
     @Param('playlistId', ParseIntPipe) playlistId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userPlaylistService.accessPlaylist(userId, playlistId);
+
       return await this.userPlaylistService.delete(playlistId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -128,11 +142,15 @@ export class UserPlaylistController {
 
   @Put(':playlistId/:songId')
   public async addSong(
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Param('songId', ParseIntPipe) songId: number,
-    @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userPlaylistService.accessPlaylist(userId, playlistId);
+      await this.userPlaylistService.accessSong(userId, songId, role);
+
       return await this.userPlaylistService.addSong(playlistId, userId, songId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -148,11 +166,15 @@ export class UserPlaylistController {
 
   @Delete(':playlistId/:songId')
   public async deleteSong(
+    @UserId() userId: number,
+    @UserRole() role: Role,
     @Param('playlistId', ParseIntPipe) playlistId: number,
     @Param('songId', ParseIntPipe) songId: number,
-    @Query('userId', ParseIntPipe) userId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userPlaylistService.accessPlaylist(userId, playlistId);
+      await this.userPlaylistService.accessSong(userId, songId, role);
+
       return await this.userPlaylistService.deleteSong(
         playlistId,
         userId,

@@ -1,30 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
+import { BaseContentService } from '@base/content.service';
 import {
   getArtistContentWhere,
   getContentWhere,
 } from '@constants/content-where';
-import { PrismaService } from '@database/prisma.service';
 import { NotFoundError } from '@errors/not-found';
-import { FileService } from '@services/file/file.service';
 
 import { FileType } from '@interfaces/file';
 
 @Injectable()
-export class ContentCoverService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly file: FileService,
-  ) {}
-
+export class ContentCoverService extends BaseContentService {
   public async getSongCover(
     songId: number,
-    role?: Role,
     userId?: number,
+    role?: Role,
   ): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, ...getContentWhere(role, userId) },
+      where: { id: songId, ...getContentWhere(userId, role) },
       select: { artistId: true, cover: true },
     });
 
@@ -44,11 +38,11 @@ export class ContentCoverService {
 
   public async getAlbumCover(
     albumId: number,
-    role?: Role,
     userId?: number,
+    role?: Role,
   ): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.album.findFirstOrThrow({
-      where: { id: albumId, ...getContentWhere(role, userId) },
+      where: { id: albumId, ...getContentWhere(userId, role) },
       select: { artistId: true, cover: true },
     });
 
@@ -68,11 +62,11 @@ export class ContentCoverService {
 
   public async getArtistCover(
     artistId: number,
-    role?: Role,
     userId?: number,
+    role?: Role,
   ): Promise<Buffer> {
     const { cover } = await this.prisma.artist.findFirstOrThrow({
-      where: { id: artistId, ...getArtistContentWhere(role, userId) },
+      where: { id: artistId, ...getArtistContentWhere(userId, role) },
       select: { cover: true },
     });
 
@@ -91,8 +85,8 @@ export class ContentCoverService {
   }
 
   public async getPlaylistCover(
-    playlistId: number,
     userId: number,
+    playlistId: number,
   ): Promise<Buffer> {
     const { cover } = await this.prisma.playlist.findFirstOrThrow({
       where: { id: playlistId, userId },

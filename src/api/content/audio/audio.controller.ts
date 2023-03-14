@@ -37,7 +37,7 @@ export class ContentAudioController {
   ): Promise<void> {
     try {
       const { stream, size, start, end } =
-        await this.contentAudioService.getAudio(songId, range, role, userId);
+        await this.contentAudioService.getAudio(songId, range, userId, role);
 
       if (range) {
         const chunksize = end - start + 1;
@@ -46,11 +46,16 @@ export class ContentAudioController {
           'Content-Range': `bytes ${start}-${end}/${size}`,
           'Content-Length': chunksize,
         });
+
         stream.pipe(res);
+        stream.on('close', () => {
+          void this.contentAudioService.addListens(songId);
+        });
       } else {
         res.writeHead(HttpStatus.OK, {
           'Content-Length': size,
         });
+
         stream.pipe(res);
       }
     } catch (error) {

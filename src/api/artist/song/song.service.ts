@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Role, Status } from '@prisma/client';
 
-import { PrismaService } from '@database/prisma.service';
-import { FileService } from '@services/file/file.service';
+import { BaseArtistService } from '@base/artist.service';
 
 import { FileType } from '@interfaces/file';
 
@@ -16,7 +15,7 @@ import type {
 import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class ArtistSongService {
+export class ArtistSongService extends BaseArtistService {
   private readonly songSelect = {
     id: true,
     name: true,
@@ -26,11 +25,6 @@ export class ArtistSongService {
     status: true,
     cover: true,
   };
-
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly file: FileService,
-  ) {}
 
   public async create(
     data: ICreateSong,

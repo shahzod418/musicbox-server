@@ -8,8 +8,9 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
-import { UserId } from '@decorators/users.decorator';
+import { UserId, UserRole } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 
@@ -24,9 +25,12 @@ export class UserAlbumController {
   constructor(private readonly userAlbumService: UserAlbumService) {}
 
   @Get()
-  public async findAll(@UserId() userId: number): Promise<IAlbum[]> {
+  public async findAll(
+    @UserId() userId: number,
+    @UserRole() role: Role,
+  ): Promise<IAlbum[]> {
     try {
-      return await this.userAlbumService.findAll(userId);
+      return await this.userAlbumService.findAll(userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
@@ -39,9 +43,12 @@ export class UserAlbumController {
   @Put()
   public async addAlbum(
     @UserId() userId: number,
+    @UserRole() role: Role,
     @Body('albumId', ParseIntPipe) albumId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userAlbumService.accessAlbum(userId, albumId, role);
+
       return await this.userAlbumService.addAlbum(userId, albumId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -58,9 +65,12 @@ export class UserAlbumController {
   @Delete()
   public async removeAlbum(
     @UserId() userId: number,
+    @UserRole() role: Role,
     @Body('albumId', ParseIntPipe) albumId: number,
   ): Promise<ISuccess> {
     try {
+      await this.userAlbumService.accessAlbum(userId, albumId, role);
+
       return await this.userAlbumService.removeAlbum(userId, albumId);
     } catch (error) {
       if (error instanceof PrismaClientError) {

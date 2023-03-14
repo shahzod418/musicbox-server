@@ -27,28 +27,21 @@ export class ContentSongService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  public async findAll(role?: Role, userId?: number): Promise<ISong[]> {
+  public async findAll(userId?: number, role?: Role): Promise<ISong[]> {
     return await this.prisma.song.findMany({
-      where: getContentWhere(role, userId),
+      where: getContentWhere(userId, role),
       select: this.songSelect,
     });
   }
 
   public async findOne(
     songId: number,
-    role?: Role,
     userId?: number,
+    role?: Role,
   ): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, ...getContentWhere(role, userId) },
+      where: { id: songId, ...getContentWhere(userId, role) },
       select: this.songSelect,
-    });
-  }
-
-  public async addListens(songId: number): Promise<void> {
-    await this.prisma.song.update({
-      data: { listens: { increment: 1 } },
-      where: { id: songId },
     });
   }
 }

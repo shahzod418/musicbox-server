@@ -1,11 +1,10 @@
 import Joi from 'joi';
 
-import type { ICreateArtist, IUpdateArtist } from './profile.interface';
+import type { ICreateArtistBody, IUpdateArtist } from './profile.interface';
 
-export const createArtistSchema = Joi.object<ICreateArtist>({
+export const createArtistSchema = Joi.object<ICreateArtistBody>({
   name: Joi.string().min(3).max(30).required(),
   description: Joi.string(),
-  userId: Joi.number().integer().positive().required(),
 });
 
 export const updateArtistSchema = Joi.object<IUpdateArtist>({

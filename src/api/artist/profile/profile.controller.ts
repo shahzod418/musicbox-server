@@ -4,10 +4,8 @@ import {
   Controller,
   Delete,
   Get,
-  ParseIntPipe,
   Patch,
   Post,
-  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -16,6 +14,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 
 import { Roles } from '@decorators/roles.decorator';
+import { UserId } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
@@ -28,7 +27,7 @@ import type { ISuccess } from '@interfaces/response';
 
 import {
   IArtistFiles,
-  ICreateArtist,
+  ICreateArtistBody,
   IUpdateArtist,
 } from './profile.interface';
 
@@ -50,7 +49,8 @@ export class ArtistProfileController {
     ]),
   )
   public async create(
-    @Body(new ValidationBodyPipe(createArtistSchema)) data: ICreateArtist,
+    @UserId() userId: number,
+    @Body(new ValidationBodyPipe(createArtistSchema)) data: ICreateArtistBody,
     @UploadedFiles(
       new ParseAvatarPipe({ optional: true }),
       new ParseCoverPipe({ optional: true }),
@@ -58,7 +58,7 @@ export class ArtistProfileController {
     files: IArtistFiles,
   ): Promise<IArtist> {
     try {
-      return await this.artistProfileService.create(data, files);
+      return await this.artistProfileService.create({ ...data, userId }, files);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException('Artist already exist');
@@ -69,10 +69,10 @@ export class ArtistProfileController {
   }
 
   @Get()
-  public async findOne(
-    @Query('artistId', ParseIntPipe) artistId: number,
-  ): Promise<IArtist> {
+  public async findOne(@UserId() userId: number): Promise<IArtist> {
     try {
+      const artistId = await this.artistProfileService.getArtistId(userId);
+
       return await this.artistProfileService.findOne(artistId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -91,7 +91,7 @@ export class ArtistProfileController {
     ]),
   )
   public async update(
-    @Query('artistId', ParseIntPipe) artistId: number,
+    @UserId() userId: number,
     @Body(new ValidationBodyPipe(updateArtistSchema)) data: IUpdateArtist,
     @UploadedFiles(
       new ParseAvatarPipe({ optional: true }),
@@ -100,6 +100,8 @@ export class ArtistProfileController {
     files: IArtistFiles,
   ): Promise<IArtist> {
     try {
+      const artistId = await this.artistProfileService.getArtistId(userId);
+
       return await this.artistProfileService.update(artistId, data, files);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -111,10 +113,10 @@ export class ArtistProfileController {
   }
 
   @Delete()
-  public async remove(
-    @Query('artistId', ParseIntPipe) artistId: number,
-  ): Promise<ISuccess> {
+  public async remove(@UserId() userId: number): Promise<ISuccess> {
     try {
+      const artistId = await this.artistProfileService.getArtistId(userId);
+
       return await this.artistProfileService.remove(artistId);
     } catch (error) {
       if (error instanceof PrismaClientError) {

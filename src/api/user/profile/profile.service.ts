@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
-import { PrismaService } from '@database/prisma.service';
-import { FileService } from '@services/file/file.service';
+import { BaseUserService } from '@base/user.service';
 
 import { FileType } from '@interfaces/file';
 
@@ -11,18 +10,13 @@ import type { IFile } from '@interfaces/file';
 import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class UserProfileService {
+export class UserProfileService extends BaseUserService {
   private readonly profileSelect = {
     id: true,
     email: true,
     name: true,
     avatar: true,
   };
-
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly file: FileService,
-  ) {}
 
   public async findOne(userId: number): Promise<IUser> {
     return await this.prisma.user.findFirstOrThrow({

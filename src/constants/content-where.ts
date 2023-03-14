@@ -3,8 +3,8 @@ import { Status } from '@prisma/client';
 import type { Prisma, Role } from '@prisma/client';
 
 export const getContentWhere = (
-  role?: Role,
   userId?: number,
+  role?: Role,
 ): Prisma.SongWhereInput | Prisma.AlbumWhereInput => {
   switch (role) {
     case 'Admin':
@@ -28,8 +28,8 @@ export const getContentWhere = (
 };
 
 export const getArtistContentWhere = (
-  role?: Role,
   userId?: number,
+  role?: Role,
 ): Prisma.ArtistWhereInput => {
   switch (role) {
     case 'Admin':

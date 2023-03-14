@@ -29,24 +29,24 @@ export class ContentAlbumService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  public async findAll(role?: Role, userId?: number): Promise<IAlbum[]> {
+  public async findAll(userId?: number, role?: Role): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
-      where: getContentWhere(role, userId),
+      where: getContentWhere(userId, role),
       select: this.albumSelect,
     });
   }
 
   public async findOne(
     albumId: number,
-    role?: Role,
     userId?: number,
+    role?: Role,
   ): Promise<IAlbum & { songs: ISong[] }> {
     return await this.prisma.album.findFirstOrThrow({
-      where: { id: albumId, ...getContentWhere(role, userId) },
+      where: { id: albumId, ...getContentWhere(userId, role) },
       select: {
         ...this.albumSelect,
         songs: {
-          where: getContentWhere(role, userId),
+          where: getContentWhere(userId, role),
           select: this.songSelect,
         },
       },

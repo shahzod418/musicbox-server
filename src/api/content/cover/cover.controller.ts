@@ -33,8 +33,8 @@ export class ContentCoverController {
     try {
       const file = await this.contentCoverService.getSongCover(
         songId,
-        role,
         userId,
+        role,
       );
 
       return new StreamableFile(file);
@@ -62,8 +62,8 @@ export class ContentCoverController {
     try {
       const file = await this.contentCoverService.getAlbumCover(
         albumId,
-        role,
         userId,
+        role,
       );
 
       return new StreamableFile(file);
@@ -91,8 +91,8 @@ export class ContentCoverController {
     try {
       const file = await this.contentCoverService.getArtistCover(
         artistId,
-        role,
         userId,
+        role,
       );
 
       return new StreamableFile(file);
@@ -117,9 +117,11 @@ export class ContentCoverController {
     @UserId() userId: number,
   ): Promise<StreamableFile> {
     try {
+      await this.contentCoverService.accessPlaylist(userId, playlistId);
+
       const file = await this.contentCoverService.getPlaylistCover(
-        playlistId,
         userId,
+        playlistId,
       );
 
       return new StreamableFile(file);

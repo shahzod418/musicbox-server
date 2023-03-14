@@ -20,11 +20,11 @@ export class ContentAudioService {
   public async getAudio(
     songId: number,
     range?: string,
-    role?: Role,
     userId?: number,
+    role?: Role,
   ): Promise<IAudioStream> {
     const { artistId, audio } = await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, ...getContentWhere(role, userId) },
+      where: { id: songId, ...getContentWhere(userId, role) },
       select: { artistId: true, audio: true },
     });
 
@@ -62,5 +62,12 @@ export class ContentAudioService {
     });
 
     return { stream, size };
+  }
+
+  public async addListens(songId: number): Promise<void> {
+    await this.prisma.song.update({
+      data: { listens: { increment: 1 } },
+      where: { id: songId },
+    });
   }
 }

@@ -3,12 +3,12 @@ import type { Artist, Prisma } from '@prisma/client';
 
 export type IArtist = Omit<Artist, 'userId'>;
 
-export type ICreateArtist = Pick<
+export type ICreateArtistBody = Pick<
   Prisma.ArtistCreateInput,
   'name' | 'description'
-> & {
-  userId: number;
-};
+>;
+
+export type ICreateArtist = ICreateArtistBody & { userId: number };
 
 export type IUpdateArtist = Pick<
   Prisma.ArtistUpdateInput,

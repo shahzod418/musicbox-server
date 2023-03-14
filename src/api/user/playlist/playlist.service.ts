@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
+import { BaseUserService } from '@base/user.service';
 import { getContentWhere } from '@constants/content-where';
-import { PrismaService } from '@database/prisma.service';
-import { FileService } from '@services/file/file.service';
 
 import { FileType } from '@interfaces/file';
 
@@ -17,7 +16,7 @@ import type { IFile } from '@interfaces/file';
 import type { ISuccess } from '@interfaces/response';
 
 @Injectable()
-export class UserPlaylistService {
+export class UserPlaylistService extends BaseUserService {
   private readonly playlistSelect = {
     id: true,
     name: true,
@@ -46,11 +45,6 @@ export class UserPlaylistService {
       },
     },
   };
-
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly file: FileService,
-  ) {}
 
   public async create(
     data: ICreatePlaylist,
@@ -91,14 +85,15 @@ export class UserPlaylistService {
   public async findOne(
     playlistId: number,
     userId: number,
+    role: Role,
   ): Promise<IPlaylist & { songs: ISong[] }> {
     const { songs, ...playlist } = await this.prisma.playlist.findFirstOrThrow({
-      where: { id: playlistId, userId },
+      where: { id: playlistId },
       select: {
         ...this.playlistSelect,
         songs: {
           ...this.songsSelect,
-          where: getContentWhere(Role.User),
+          where: getContentWhere(userId, role),
         },
       },
     });
@@ -110,17 +105,20 @@ export class UserPlaylistService {
   }
 
   public async update(
-    playlistId: number,
-    payload: IUpdatePlaylist,
+    user: { userId: number; role: Role },
+    data: { playlistId: number } & IUpdatePlaylist,
     cover?: IFile,
   ): Promise<IPlaylist & { songs: ISong[] }> {
+    const { userId, role } = user;
+    const { playlistId, ...payload } = data;
+
     const { cover: previousCover } =
       await this.prisma.playlist.findFirstOrThrow({
         where: { id: playlistId },
         select: { cover: true },
       });
 
-    const { userId, songs, ...playlist } = await this.prisma.playlist.update({
+    const { songs, ...playlist } = await this.prisma.playlist.update({
       data: {
         ...payload,
         ...(cover && { cover: { set: cover.name } }),
@@ -130,9 +128,8 @@ export class UserPlaylistService {
         ...this.playlistSelect,
         songs: {
           ...this.songsSelect,
-          where: getContentWhere(Role.User),
+          where: getContentWhere(userId, role),
         },
-        userId: true,
       },
     });
 

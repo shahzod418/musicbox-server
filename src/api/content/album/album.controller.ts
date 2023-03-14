@@ -27,7 +27,7 @@ export class ContentAlbumController {
     @UserRole() role?: Role,
   ): Promise<IAlbum[]> {
     try {
-      return await this.contentAlbumService.findAll(role, userId);
+      return await this.contentAlbumService.findAll(userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
@@ -44,7 +44,7 @@ export class ContentAlbumController {
     @UserRole() role?: Role,
   ): Promise<IAlbum & { songs: ISong[] }> {
     try {
-      return await this.contentAlbumService.findOne(albumId, role, userId);
+      return await this.contentAlbumService.findOne(albumId, userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);

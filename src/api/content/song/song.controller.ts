@@ -4,7 +4,6 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   UseGuards,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
@@ -24,11 +23,11 @@ export class ContentSongController {
 
   @Get()
   public async findAll(
-    @UserRole() role?: Role,
     @UserId() userId?: number,
+    @UserRole() role?: Role,
   ): Promise<ISong[]> {
     try {
-      return await this.contentSongService.findAll(role, userId);
+      return await this.contentSongService.findAll(userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
@@ -41,29 +40,14 @@ export class ContentSongController {
   @Get(':songId')
   public async findOne(
     @Param('songId', ParseIntPipe) songId: number,
-    @UserRole() role?: Role,
     @UserId() userId?: number,
+    @UserRole() role?: Role,
   ): Promise<ISong> {
     try {
-      return await this.contentSongService.findOne(songId, role, userId);
+      return await this.contentSongService.findOne(songId, userId, role);
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
-      }
-
-      throw error;
-    }
-  }
-
-  @Patch(':songId/listens')
-  public async addListens(
-    @Param('songId', ParseIntPipe) songId: number,
-  ): Promise<void> {
-    try {
-      return await this.contentSongService.addListens(songId);
-    } catch (error) {
-      if (error instanceof PrismaClientError) {
-        throw new BadRequestException(error.meta.cause);
       }
 
       throw error;

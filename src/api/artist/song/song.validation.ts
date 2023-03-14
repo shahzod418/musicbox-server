@@ -1,11 +1,10 @@
 import Joi from 'joi';
 
-import type { ICreateSong, IUpdateSong } from './song.interface';
+import type { ICreateSongBody, IUpdateSong } from './song.interface';
 
-export const createSongSchema = Joi.object<ICreateSong>({
+export const createSongSchema = Joi.object<ICreateSongBody>({
   name: Joi.string().min(3).max(30).required(),
   text: Joi.string(),
-  artistId: Joi.number().integer().positive().required(),
   albumId: Joi.number().integer().positive(),
 });
 

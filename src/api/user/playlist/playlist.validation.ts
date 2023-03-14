@@ -1,10 +1,12 @@
 import Joi from 'joi';
 
-import type { ICreatePlaylist, IUpdatePlaylist } from './playlist.interface';
+import type {
+  ICreatePlaylistBody,
+  IUpdatePlaylist,
+} from './playlist.interface';
 
-export const createPlaylistSchema = Joi.object<ICreatePlaylist>({
+export const createPlaylistSchema = Joi.object<ICreatePlaylistBody>({
   name: Joi.string().min(3).max(30).required(),
-  userId: Joi.number().required(),
 });
 
 export const updatePlaylistSchema = Joi.object<IUpdatePlaylist>({

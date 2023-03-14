@@ -4,15 +4,14 @@ import {
   Controller,
   Delete,
   Get,
-  ParseIntPipe,
   Patch,
-  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
+import { UserId } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { ParseAvatarPipe } from '@pipes/parse-avatar';
@@ -33,9 +32,7 @@ export class UserProfileController {
   constructor(private readonly userProfileService: UserProfileService) {}
 
   @Get()
-  public async findOne(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<IUser> {
+  public async findOne(@UserId() userId: number): Promise<IUser> {
     try {
       return this.userProfileService.findOne(userId);
     } catch (error) {
@@ -50,7 +47,7 @@ export class UserProfileController {
   @Patch()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'avatar', maxCount: 1 }]))
   public async update(
-    @Query('userId', ParseIntPipe) userId: number,
+    @UserId() userId: number,
     @Body(new ValidationBodyPipe(updateUserSchema)) data: IUpdateUser,
     @UploadedFiles(new ParseAvatarPipe({ optional: true }))
     files: { avatar?: IFile },
@@ -67,9 +64,7 @@ export class UserProfileController {
   }
 
   @Delete('avatar')
-  public async removeAvatar(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<ISuccess> {
+  public async removeAvatar(@UserId() userId: number): Promise<ISuccess> {
     try {
       return await this.userProfileService.removeAvatar(userId);
     } catch (error) {

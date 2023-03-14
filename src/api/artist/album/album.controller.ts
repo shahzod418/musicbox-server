@@ -8,7 +8,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -17,6 +16,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 
 import { Roles } from '@decorators/roles.decorator';
+import { UserId } from '@decorators/users.decorator';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
@@ -27,7 +27,7 @@ import type { IAlbum, ISong } from './album.interface';
 import type { IFile } from '@interfaces/file';
 import type { ISuccess } from '@interfaces/response';
 
-import { ICreateAlbum, IUpdateAlbum } from './album.interface';
+import { ICreateAlbumBody, IUpdateAlbum } from './album.interface';
 
 import { ArtistAlbumService } from './album.service';
 import { createAlbumSchema, updateAlbumSchema } from './album.validation';
@@ -42,12 +42,18 @@ export class ArtistAlbumController {
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async create(
-    @Body(new ValidationBodyPipe(createAlbumSchema)) data: ICreateAlbum,
+    @UserId() userId: number,
+    @Body(new ValidationBodyPipe(createAlbumSchema)) data: ICreateAlbumBody,
     @UploadedFiles(new ParseCoverPipe({ optional: true }))
     files: { cover?: IFile },
   ): Promise<IAlbum> {
     try {
-      return await this.artistAlbumService.create(data, files.cover);
+      const artistId = await this.artistAlbumService.getArtistId(userId);
+
+      return await this.artistAlbumService.create(
+        { ...data, artistId },
+        files.cover,
+      );
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
@@ -58,10 +64,10 @@ export class ArtistAlbumController {
   }
 
   @Get()
-  public async findAll(
-    @Query('artistId', ParseIntPipe) artistId: number,
-  ): Promise<IAlbum[]> {
+  public async findAll(@UserId() userId: number): Promise<IAlbum[]> {
     try {
+      const artistId = await this.artistAlbumService.getArtistId(userId);
+
       return await this.artistAlbumService.findAll(artistId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -74,9 +80,12 @@ export class ArtistAlbumController {
 
   @Get(':albumId')
   public async findOne(
+    @UserId() userId: number,
     @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<IAlbum & ISong> {
     try {
+      await this.artistAlbumService.accessAlbum(userId, albumId);
+
       return await this.artistAlbumService.findOne(albumId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -90,12 +99,15 @@ export class ArtistAlbumController {
   @Patch(':albumId')
   @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async update(
+    @UserId() userId: number,
     @Param('albumId', ParseIntPipe) albumId: number,
     @Body(new ValidationBodyPipe(updateAlbumSchema)) data: IUpdateAlbum,
     @UploadedFiles(new ParseCoverPipe({ optional: true }))
     files: { cover?: IFile },
   ): Promise<IAlbum> {
     try {
+      await this.artistAlbumService.accessAlbum(userId, albumId);
+
       return await this.artistAlbumService.update(albumId, data, files.cover);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -108,9 +120,12 @@ export class ArtistAlbumController {
 
   @Delete(':albumId')
   public async remove(
+    @UserId() userId: number,
     @Param('albumId', ParseIntPipe) albumId: number,
   ): Promise<ISuccess> {
     try {
+      await this.artistAlbumService.accessAlbum(userId, albumId);
+
       return await this.artistAlbumService.remove(albumId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -123,10 +138,14 @@ export class ArtistAlbumController {
 
   @Patch(':albumId/:songId')
   public async addSong(
+    @UserId() userId: number,
     @Param('albumId', ParseIntPipe) albumId: number,
     @Param('songId', ParseIntPipe) songId: number,
   ): Promise<ISuccess> {
     try {
+      await this.artistAlbumService.accessAlbum(userId, albumId);
+      await this.artistAlbumService.accessSong(userId, songId);
+
       return await this.artistAlbumService.addSong(albumId, songId);
     } catch (error) {
       if (error instanceof PrismaClientError) {
@@ -139,10 +158,14 @@ export class ArtistAlbumController {
 
   @Delete(':albumId/:songId')
   public async removeSong(
+    @UserId() userId: number,
     @Param('albumId', ParseIntPipe) albumId: number,
     @Param('songId', ParseIntPipe) songId: number,
   ): Promise<ISuccess> {
     try {
+      await this.artistAlbumService.accessAlbum(userId, albumId);
+      await this.artistAlbumService.accessSong(userId, songId);
+
       return await this.artistAlbumService.removeSong(albumId, songId);
     } catch (error) {
       if (error instanceof PrismaClientError) {

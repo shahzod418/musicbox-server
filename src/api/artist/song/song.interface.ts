@@ -3,10 +3,11 @@ import type { Prisma, Song } from '@prisma/client';
 
 export type ISong = Omit<Song, 'artistId' | 'albumId' | 'audio'>;
 
-export type ICreateSong = Pick<Prisma.SongCreateInput, 'name' | 'text'> & {
-  artistId: number;
+export type ICreateSongBody = Pick<Prisma.SongCreateInput, 'name' | 'text'> & {
   albumId?: number;
 };
+
+export type ICreateSong = ICreateSongBody & { artistId: number };
 
 export type IUpdateSong = Pick<Prisma.SongUpdateInput, 'name' | 'text'> & {
   albumId?: number;

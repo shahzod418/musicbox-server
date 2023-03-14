@@ -56,8 +56,8 @@ export class ContentAvatarController {
     try {
       const file = await this.contentAvatarService.getArtistAvatar(
         artistId,
-        role,
         userId,
+        role,
       );
 
       return new StreamableFile(file);
