@@ -18,10 +18,8 @@ export class ParseAvatarPipe implements PipeTransform {
       const avatar =
         files?.avatar instanceof Array ? files?.avatar?.at(0) : files?.avatar;
 
-      if (!this.options?.optional) {
-        if (!avatar) {
-          throw new Error('Avatar is required');
-        }
+      if (!avatar && !this.options?.optional) {
+        throw new Error('Avatar is required');
       }
 
       return {

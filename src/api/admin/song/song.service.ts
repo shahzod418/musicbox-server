@@ -74,6 +74,7 @@ export class AdminSongService {
     return song;
   }
 
+  // TODO: May be getById or get() ?
   public async findOne(songId: number): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
       where: { id: songId },

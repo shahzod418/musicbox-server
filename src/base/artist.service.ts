@@ -10,6 +10,7 @@ export class BaseArtistService {
     protected readonly file: FileService,
   ) {}
 
+  // TODO: Where is exception?
   public async getArtistId(userId: number): Promise<number> {
     const { id } = await this.prisma.artist.findFirstOrThrow({
       where: { userId },

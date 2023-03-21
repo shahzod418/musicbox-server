@@ -21,6 +21,7 @@ import type { ReadStream } from 'fs';
 
 @Injectable()
 export class FileService {
+  // TODO: return boolean result
   public async addFile(args: IAddFileArgs): Promise<void> {
     const { id, role, type, file } = args;
 
@@ -60,6 +61,7 @@ export class FileService {
     return size;
   }
 
+  // TODO: return boolean result
   public async updateFile(args: IUpdateFileArgs): Promise<void> {
     const { id, role, type, currentFile, previousFilename } = args;
 
@@ -90,6 +92,7 @@ export class FileService {
     await writeFile(this.getFilePath({ id, role, type, filename: name }), data);
   }
 
+  // TODO: return boolean result and cache value
   public async removeFile(args: IRemoveFileArgs): Promise<void> {
     const filePath = this.getFilePath(args);
 
@@ -99,6 +102,7 @@ export class FileService {
     } catch {}
   }
 
+  // TODO: return boolean result
   public removeResources(id: number, role: Role): Promise<void> {
     return rm(this.getResourcesDirPath(id, role), {
       recursive: true,

@@ -11,8 +11,11 @@ export class PrismaService extends PrismaClient {
     });
   }
 
+  // TODO: Very bad practice!!!
   async onModuleInit(): Promise<void> {
     await this.$connect();
+
+    // Add console command or data for seeding
 
     // await this.user.upsert({
     //   data: {
