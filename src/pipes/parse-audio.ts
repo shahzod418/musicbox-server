@@ -16,20 +16,16 @@ export class ParseAudioPipe implements PipeTransform {
     const audio =
       files?.audio instanceof Array ? files?.audio?.at(0) : files?.audio;
 
-    if (!this.options?.optional) {
-      if (!audio) {
-        throw new BadRequestException('Audio is required');
-      }
+    if (!audio && !this.options?.optional) {
+      throw new BadRequestException('Audio is required');
     }
 
-    if (audio) {
-      if (audio.mimetype !== 'audio/mpeg') {
-        throw new BadRequestException('Not audio');
-      }
+    if (audio && audio.mimetype !== 'audio/mpeg') {
+      throw new BadRequestException('Not audio');
+    }
 
-      if (parse(audio.originalname).ext !== '.mp3') {
-        throw new BadRequestException('MP3 only');
-      }
+    if (audio && parse(audio.originalname).ext !== '.mp3') {
+      throw new BadRequestException('MP3 only');
     }
 
     return {

@@ -5,12 +5,11 @@ import type { IUserRequest } from '@interfaces/user';
 
 @Injectable()
 export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  handleRequest(error: unknown, user: IUserRequest): IUserRequest {
+  handleRequest<T extends IUserRequest>(error: unknown, user: T): T {
     if (error) {
       throw new UnauthorizedException();
     }
+
     return user;
   }
 }

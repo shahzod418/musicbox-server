@@ -18,10 +18,8 @@ export class ParseCoverPipe implements PipeTransform {
       const cover =
         files?.cover instanceof Array ? files?.cover?.at(0) : files?.cover;
 
-      if (!this.options?.optional) {
-        if (!cover) {
-          throw new BadRequestException('Cover is required');
-        }
+      if (!cover && !this.options?.optional) {
+        throw new BadRequestException('Cover is required');
       }
 
       return {
