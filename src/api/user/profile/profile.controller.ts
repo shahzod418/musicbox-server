@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Patch,
   UploadedFiles,
   UseGuards,
@@ -12,6 +13,7 @@ import {
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 import { UserId } from '@decorators/users.decorator';
+import { FileNotRemovedError, FileNotUpdatedError } from '@errors/file';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { ParseAvatarPipe } from '@pipes/parse-avatar';
@@ -59,6 +61,10 @@ export class UserProfileController {
         throw new BadRequestException(error.meta.cause);
       }
 
+      if (error instanceof FileNotUpdatedError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -70,6 +76,10 @@ export class UserProfileController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof FileNotRemovedError) {
+        throw new InternalServerErrorException(error.message);
       }
 
       throw error;

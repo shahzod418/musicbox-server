@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { InvalidPassword, UserAlreadyExists } from '@errors/auth';
+import { InvalidPasswordError, UserExistError } from '@errors/auth';
 import { PrismaClientError } from '@errors/prisma';
 import { ValidationBodyPipe } from '@pipes/validation-body';
 
@@ -32,7 +32,7 @@ export class AuthController {
         throw new BadRequestException(error.meta.cause);
       }
 
-      if (error instanceof UserAlreadyExists) {
+      if (error instanceof UserExistError) {
         throw new BadRequestException(error.message);
       }
 
@@ -51,7 +51,7 @@ export class AuthController {
         throw new BadRequestException(error.message);
       }
 
-      if (error instanceof InvalidPassword) {
+      if (error instanceof InvalidPasswordError) {
         throw new UnauthorizedException(error.message);
       }
 

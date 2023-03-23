@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
 
-import { InvalidPassword, UserAlreadyExists } from '@errors/auth';
+import { InvalidPasswordError, UserExistError } from '@errors/auth';
 import { UserService } from '@services/user/user.service';
 
 import type { IAccessToken, ISignData, IUser } from './auth.interface';
@@ -20,7 +20,7 @@ export class AuthService {
 
     const isUniqueUser = await this.user.isUnique(data.email);
     if (!isUniqueUser) {
-      throw new UserAlreadyExists();
+      throw new UserExistError();
     }
 
     const hashPassword = await hash(password, 10);
@@ -38,7 +38,7 @@ export class AuthService {
     const isValidPassword = await compare(password, user.hash);
 
     if (!isValidPassword) {
-      throw new InvalidPassword();
+      throw new InvalidPasswordError();
     }
 
     return await this.getJwt(user);

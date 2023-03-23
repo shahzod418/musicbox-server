@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -17,6 +18,11 @@ import { Role } from '@prisma/client';
 
 import { Roles } from '@decorators/roles.decorator';
 import { UserId } from '@decorators/users.decorator';
+import {
+  FileNotRecordError,
+  FileNotRemovedError,
+  FileNotUpdatedError,
+} from '@errors/file';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
@@ -64,6 +70,10 @@ export class ArtistSongController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof FileNotRecordError) {
+        throw new InternalServerErrorException(error.message);
       }
 
       throw error;
@@ -129,6 +139,10 @@ export class ArtistSongController {
         throw new BadRequestException(error.meta.cause);
       }
 
+      if (error instanceof FileNotUpdatedError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -145,6 +159,10 @@ export class ArtistSongController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof FileNotRemovedError) {
+        throw new InternalServerErrorException(error.message);
       }
 
       throw error;

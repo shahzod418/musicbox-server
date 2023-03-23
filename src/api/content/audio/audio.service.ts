@@ -3,7 +3,6 @@ import { Role } from '@prisma/client';
 
 import { getContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
-import { NotFoundError } from '@errors/not-found';
 import { FileService } from '@services/file/file.service';
 
 import { FileType } from '@interfaces/file';
@@ -27,10 +26,6 @@ export class ContentAudioService {
       where: { id: songId, ...getContentWhere(userId, role) },
       select: { artistId: true, audio: true },
     });
-
-    if (!audio) {
-      throw new NotFoundError(FileType.Audio);
-    }
 
     const getSizeArgs = {
       id: artistId,

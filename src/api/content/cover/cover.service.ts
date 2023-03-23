@@ -6,7 +6,6 @@ import {
   getArtistContentWhere,
   getContentWhere,
 } from '@constants/content-where';
-import { NotFoundError } from '@errors/not-found';
 
 import { FileType } from '@interfaces/file';
 
@@ -21,10 +20,6 @@ export class ContentCoverService extends BaseContentService {
       where: { id: songId, ...getContentWhere(userId, role) },
       select: { artistId: true, cover: true },
     });
-
-    if (!cover) {
-      throw new NotFoundError(FileType.Cover);
-    }
 
     const getCoverArgs = {
       id: artistId,
@@ -46,10 +41,6 @@ export class ContentCoverService extends BaseContentService {
       select: { artistId: true, cover: true },
     });
 
-    if (!cover) {
-      throw new NotFoundError(FileType.Cover);
-    }
-
     const getCoverArgs = {
       id: artistId,
       role: Role.Artist,
@@ -70,10 +61,6 @@ export class ContentCoverService extends BaseContentService {
       select: { cover: true },
     });
 
-    if (!cover) {
-      throw new NotFoundError(FileType.Cover);
-    }
-
     const getCoverArgs = {
       id: artistId,
       role: Role.Artist,
@@ -92,10 +79,6 @@ export class ContentCoverService extends BaseContentService {
       where: { id: playlistId, userId },
       select: { cover: true },
     });
-
-    if (!cover) {
-      throw new NotFoundError(FileType.Cover);
-    }
 
     const getCoverArgs = {
       id: playlistId,

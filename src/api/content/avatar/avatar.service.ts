@@ -3,7 +3,6 @@ import { Role } from '@prisma/client';
 
 import { getArtistContentWhere } from '@constants/content-where';
 import { PrismaService } from '@database/prisma.service';
-import { NotFoundError } from '@errors/not-found';
 import { FileService } from '@services/file/file.service';
 
 import { FileType } from '@interfaces/file';
@@ -20,10 +19,6 @@ export class ContentAvatarService {
       where: { id: userId },
       select: { avatar: true },
     });
-
-    if (!avatar) {
-      throw new NotFoundError(FileType.Avatar);
-    }
 
     const getAvatarArgs = {
       id: userId,
@@ -44,10 +39,6 @@ export class ContentAvatarService {
       where: { id: artistId, ...getArtistContentWhere(userId, role) },
       select: { avatar: true },
     });
-
-    if (!avatar) {
-      throw new NotFoundError(FileType.Avatar);
-    }
 
     const getAvatarArgs = {
       id: artistId,

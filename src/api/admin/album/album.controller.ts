@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,6 +17,11 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 
 import { Roles } from '@decorators/roles.decorator';
+import {
+  FileNotRecordError,
+  FileNotRemovedError,
+  FileNotUpdatedError,
+} from '@errors/file';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
@@ -50,6 +56,10 @@ export class AdminAlbumController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.message);
+      }
+
+      if (error instanceof FileNotRecordError) {
+        throw new InternalServerErrorException(error.message);
       }
 
       throw error;
@@ -87,6 +97,10 @@ export class AdminAlbumController {
         throw new BadRequestException(error.message);
       }
 
+      if (error instanceof FileNotUpdatedError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -102,6 +116,10 @@ export class AdminAlbumController {
         throw new BadRequestException(error.meta.cause);
       }
 
+      if (error instanceof FileNotRemovedError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -115,6 +133,10 @@ export class AdminAlbumController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof FileNotRemovedError) {
+        throw new InternalServerErrorException(error.message);
       }
 
       throw error;

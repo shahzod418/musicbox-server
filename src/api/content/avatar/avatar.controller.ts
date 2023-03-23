@@ -11,7 +11,7 @@ import {
 import { Role } from '@prisma/client';
 
 import { UserId, UserRole } from '@decorators/users.decorator';
-import { NotFoundError } from '@errors/not-found';
+import { FileNotFoundError } from '@errors/file';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '@guards/optional-jwt-auth.guard';
@@ -37,7 +37,7 @@ export class ContentAvatarController {
         throw new BadRequestException(error.message);
       }
 
-      if (error instanceof NotFoundError) {
+      if (error instanceof FileNotFoundError) {
         throw new BadRequestException(error.message);
       }
 
@@ -66,7 +66,7 @@ export class ContentAvatarController {
         throw new BadRequestException(error.message);
       }
 
-      if (error instanceof NotFoundError) {
+      if (error instanceof FileNotFoundError) {
         throw new BadRequestException(error.message);
       }
 

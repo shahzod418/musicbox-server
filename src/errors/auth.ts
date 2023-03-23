@@ -1,11 +1,11 @@
-export class UserAlreadyExists extends Error {
+export class UserExistError extends Error {
   constructor() {
     super();
     this.message = 'User already exists';
   }
 }
 
-export class InvalidPassword extends Error {
+export class InvalidPasswordError extends Error {
   constructor() {
     super();
     this.message = 'Invalid password';

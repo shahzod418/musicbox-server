@@ -5,6 +5,14 @@ import { resolve } from 'path';
 import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
+import {
+  FileNotFoundError,
+  FileNotRecordError,
+  FileNotRemovedError,
+  FileNotUpdatedError,
+  ResourcesNotRemovedError,
+} from '@errors/file';
+
 import { FileType } from '@interfaces/file';
 
 import type {
@@ -34,7 +42,14 @@ export class FileService {
 
     const { name, data } = file;
 
-    await writeFile(this.getFilePath({ id, role, type, filename: name }), data);
+    try {
+      await writeFile(
+        this.getFilePath({ id, role, type, filename: name }),
+        data,
+      );
+    } catch {
+      throw new FileNotRecordError();
+    }
   }
 
   public createAudioStream(args: ICreateAudioStreamArgs): ReadStream {
@@ -47,17 +62,32 @@ export class FileService {
       type: FileType.Audio,
     };
 
-    return createReadStream(this.getFilePath(getFilePathArgs), { start, end });
+    try {
+      return createReadStream(this.getFilePath(getFilePathArgs), {
+        start,
+        end,
+      });
+    } catch {
+      throw new FileNotFoundError(FileType.Audio);
+    }
   }
 
   public getFile(args: IGetFileArgs): Promise<Buffer> {
-    return readFile(this.getFilePath(args));
+    try {
+      return readFile(this.getFilePath(args));
+    } catch {
+      throw new FileNotFoundError(args.type);
+    }
   }
 
   public async getSize(args: IGetSizeArgs): Promise<number> {
-    const { size } = await stat(this.getFilePath(args));
+    try {
+      const { size } = await stat(this.getFilePath(args));
 
-    return size;
+      return size;
+    } catch {
+      throw new FileNotFoundError(args.type);
+    }
   }
 
   public async updateFile(args: IUpdateFileArgs): Promise<void> {
@@ -80,30 +110,43 @@ export class FileService {
       });
 
       try {
-        await access(filePath);
         await rm(filePath);
-      } catch {}
+      } catch {
+        throw new FileNotUpdatedError();
+      }
     }
 
     const { name, data } = currentFile;
 
-    await writeFile(this.getFilePath({ id, role, type, filename: name }), data);
+    try {
+      await writeFile(
+        this.getFilePath({ id, role, type, filename: name }),
+        data,
+      );
+    } catch {
+      throw new FileNotUpdatedError();
+    }
   }
 
   public async removeFile(args: IRemoveFileArgs): Promise<void> {
     const filePath = this.getFilePath(args);
 
     try {
-      await access(filePath);
       await rm(filePath);
-    } catch {}
+    } catch {
+      throw new FileNotRemovedError();
+    }
   }
 
   public removeResources(id: number, role: Role): Promise<void> {
-    return rm(this.getResourcesDirPath(id, role), {
-      recursive: true,
-      force: true,
-    });
+    try {
+      return rm(this.getResourcesDirPath(id, role), {
+        recursive: true,
+        force: true,
+      });
+    } catch {
+      throw new ResourcesNotRemovedError();
+    }
   }
 
   private getDirPath(args: IGetDirPathArgs): string {

@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,6 +17,12 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 
 import { Roles } from '@decorators/roles.decorator';
+import {
+  FileNotRecordError,
+  FileNotRemovedError,
+  FileNotUpdatedError,
+  ResourcesNotRemovedError,
+} from '@errors/file';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
@@ -52,6 +59,10 @@ export class AdminUserController {
         throw new BadRequestException('User already exist');
       }
 
+      if (error instanceof FileNotRecordError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -85,6 +96,10 @@ export class AdminUserController {
         throw new BadRequestException(error.meta.cause);
       }
 
+      if (error instanceof FileNotUpdatedError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -100,6 +115,10 @@ export class AdminUserController {
         throw new BadRequestException(error.meta.cause);
       }
 
+      if (error instanceof ResourcesNotRemovedError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -113,6 +132,10 @@ export class AdminUserController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof FileNotRemovedError) {
+        throw new InternalServerErrorException(error.message);
       }
 
       throw error;

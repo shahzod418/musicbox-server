@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Patch,
   Post,
   UploadedFiles,
@@ -15,6 +16,7 @@ import { Role } from '@prisma/client';
 
 import { Roles } from '@decorators/roles.decorator';
 import { UserId } from '@decorators/users.decorator';
+import { FileNotRecordError, FileNotUpdatedError } from '@errors/file';
 import { PrismaClientError } from '@errors/prisma';
 import { JwtAuthGuard } from '@guards/jwt-auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
@@ -64,6 +66,10 @@ export class ArtistProfileController {
         throw new BadRequestException('Artist already exist');
       }
 
+      if (error instanceof FileNotRecordError) {
+        throw new InternalServerErrorException(error.message);
+      }
+
       throw error;
     }
   }
@@ -106,6 +112,10 @@ export class ArtistProfileController {
     } catch (error) {
       if (error instanceof PrismaClientError) {
         throw new BadRequestException(error.meta.cause);
+      }
+
+      if (error instanceof FileNotUpdatedError) {
+        throw new InternalServerErrorException(error.message);
       }
 
       throw error;
