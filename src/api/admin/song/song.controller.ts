@@ -57,8 +57,7 @@ export class AdminSongController {
     ]),
   )
   public async create(
-    @Body(new ValidationBodyPipe<ICreateSong>(createSongSchema))
-    data: ICreateSong,
+    @Body(new ValidationBodyPipe(createSongSchema)) data: ICreateSong,
     @UploadedFiles(new ParseAudioPipe(), new ParseCoverPipe({ optional: true }))
     files: ICreateSongFiles,
   ): Promise<ISong> {
@@ -101,8 +100,7 @@ export class AdminSongController {
   )
   public async update(
     @Param('songId', ParseIntPipe) songId: number,
-    @Body(new ValidationBodyPipe<IUpdateSong>(updateSongSchema))
-    data: IUpdateSong,
+    @Body(new ValidationBodyPipe(updateSongSchema)) data: IUpdateSong,
     @UploadedFiles(
       new ParseAudioPipe({ optional: true }),
       new ParseCoverPipe({ optional: true }),

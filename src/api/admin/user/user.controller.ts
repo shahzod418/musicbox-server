@@ -47,8 +47,7 @@ export class AdminUserController {
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'avatar', maxCount: 1 }]))
   public async create(
-    @Body(new ValidationBodyPipe<ICreateUser>(createUserSchema))
-    data: ICreateUser,
+    @Body(new ValidationBodyPipe(createUserSchema)) data: ICreateUser,
     @UploadedFiles(new ParseAvatarPipe({ optional: true }))
     files: IUserFiles,
   ): Promise<IUser> {
@@ -84,8 +83,7 @@ export class AdminUserController {
   @UseInterceptors(FileFieldsInterceptor([{ name: 'avatar', maxCount: 1 }]))
   public async update(
     @Param('userId', ParseIntPipe) userId: number,
-    @Body(new ValidationBodyPipe<IUpdateUser>(updateUserSchema))
-    data: IUpdateUser,
+    @Body(new ValidationBodyPipe(updateUserSchema)) data: IUpdateUser,
     @UploadedFiles(new ParseAvatarPipe({ optional: true }))
     files: IUserFiles,
   ): Promise<IUser> {

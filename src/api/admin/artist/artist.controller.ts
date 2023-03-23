@@ -54,8 +54,7 @@ export class AdminArtistController {
     ]),
   )
   public async create(
-    @Body(new ValidationBodyPipe<ICreateArtist>(createArtistSchema))
-    data: ICreateArtist,
+    @Body(new ValidationBodyPipe(createArtistSchema)) data: ICreateArtist,
     @UploadedFiles(
       new ParseAvatarPipe({ optional: true }),
       new ParseCoverPipe({ optional: true }),
@@ -159,8 +158,7 @@ export class AdminArtistController {
   )
   public async update(
     @Param('artistId', ParseIntPipe) artistId: number,
-    @Body(new ValidationBodyPipe<IUpdateArtist>(updateArtistSchema))
-    data: IUpdateArtist,
+    @Body(new ValidationBodyPipe(updateArtistSchema)) data: IUpdateArtist,
     @UploadedFiles(
       new ParseAvatarPipe({ optional: true }),
       new ParseCoverPipe({ optional: true }),

@@ -46,8 +46,7 @@ export class AdminAlbumController {
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async create(
-    @Body(new ValidationBodyPipe<ICreateAlbum>(createAlbumSchema))
-    data: ICreateAlbum,
+    @Body(new ValidationBodyPipe(createAlbumSchema)) data: ICreateAlbum,
     @UploadedFiles(new ParseCoverPipe({ optional: true }))
     files: IAlbumFiles,
   ): Promise<IAlbum> {
@@ -85,8 +84,7 @@ export class AdminAlbumController {
   @UseInterceptors(FileFieldsInterceptor([{ name: 'cover', maxCount: 1 }]))
   public async update(
     @Param('albumId', ParseIntPipe) albumId: number,
-    @Body(new ValidationBodyPipe<IUpdateAlbum>(updateAlbumSchema))
-    data: IUpdateAlbum,
+    @Body(new ValidationBodyPipe(updateAlbumSchema)) data: IUpdateAlbum,
     @UploadedFiles(new ParseCoverPipe({ optional: true }))
     files: IAlbumFiles,
   ): Promise<IAlbum> {

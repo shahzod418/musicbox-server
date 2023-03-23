@@ -23,7 +23,7 @@ export class AuthController {
 
   @Post('sign-up')
   public async signUp(
-    @Body(new ValidationBodyPipe<ISignData>(signSchema)) data: ISignData,
+    @Body(new ValidationBodyPipe(signSchema)) data: ISignData,
   ): Promise<IUser> {
     try {
       return await this.authService.signUp(data);
@@ -42,7 +42,7 @@ export class AuthController {
 
   @Post('sign-in')
   public async signIn(
-    @Body(new ValidationBodyPipe<ISignData>(signSchema)) data: ISignData,
+    @Body(new ValidationBodyPipe(signSchema)) data: ISignData,
   ): Promise<IAccessToken> {
     try {
       return await this.authService.signIn(data);
