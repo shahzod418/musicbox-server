@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseUserService } from '@base/user.service';
-import { getContentWhere } from '@constants/content-where';
+import { getPrismaWhere } from '@constants/prisma-where';
 
 import type { IAlbum } from './album.interface';
 import type { ISuccess } from '@interfaces/response';
@@ -29,7 +29,7 @@ export class UserAlbumService extends BaseUserService {
       select: {
         albums: {
           ...this.albumSelect,
-          where: { album: getContentWhere(userId, role) },
+          where: { album: getPrismaWhere(userId, role) },
         },
       },
     });

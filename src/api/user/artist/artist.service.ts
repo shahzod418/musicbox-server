@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseUserService } from '@base/user.service';
-import { getContentWhere } from '@constants/content-where';
+import { getPrismaWhere } from '@constants/prisma-where';
 
 import type { IArtist } from './artist.interface';
 import type { ISuccess } from '@interfaces/response';
@@ -29,7 +29,7 @@ export class UserArtistService extends BaseUserService {
       select: {
         artists: {
           ...this.artistSelect,
-          where: getContentWhere(userId, role),
+          where: getPrismaWhere(userId, role),
         },
       },
     });

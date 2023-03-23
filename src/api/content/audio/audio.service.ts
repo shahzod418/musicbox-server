@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
-import { getContentWhere } from '@constants/content-where';
+import { getPrismaWhere } from '@constants/prisma-where';
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
@@ -23,7 +23,7 @@ export class ContentAudioService {
     role?: Role,
   ): Promise<IAudioStream> {
     const { artistId, audio } = await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, ...getContentWhere(userId, role) },
+      where: { id: songId, ...getPrismaWhere(userId, role) },
       select: { artistId: true, audio: true },
     });
 

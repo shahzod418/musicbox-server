@@ -2,7 +2,7 @@ import { Status } from '@prisma/client';
 
 import type { Prisma, Role } from '@prisma/client';
 
-export const getContentWhere = (
+export const getPrismaWhere = (
   userId?: number,
   role?: Role,
 ): Prisma.SongWhereInput | Prisma.AlbumWhereInput => {
@@ -27,7 +27,7 @@ export const getContentWhere = (
   }
 };
 
-export const getArtistContentWhere = (
+export const getPrismaArtistWhere = (
   userId?: number,
   role?: Role,
 ): Prisma.ArtistWhereInput => {

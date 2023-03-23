@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import {
-  getArtistContentWhere,
-  getContentWhere,
-} from '@constants/content-where';
+import { getPrismaArtistWhere, getPrismaWhere } from '@constants/prisma-where';
 import { PrismaService } from '@database/prisma.service';
 
 import type { IAlbum, IArtist, IArtistShort, ISong } from './artist.interface';
@@ -47,7 +44,7 @@ export class ContentArtistService {
 
   public async findAll(userId?: number, role?: Role): Promise<IArtistShort[]> {
     return await this.prisma.artist.findMany({
-      where: getArtistContentWhere(userId, role),
+      where: getPrismaArtistWhere(userId, role),
       select: this.artistShortSelect,
     });
   }
@@ -58,7 +55,7 @@ export class ContentArtistService {
     role?: Role,
   ): Promise<IArtist> {
     return await this.prisma.artist.findFirstOrThrow({
-      where: { id: artistId, ...getArtistContentWhere(userId, role) },
+      where: { id: artistId, ...getPrismaArtistWhere(userId, role) },
       select: this.artistSelect,
     });
   }
@@ -69,7 +66,7 @@ export class ContentArtistService {
     role?: Role,
   ): Promise<IAlbum[]> {
     return await this.prisma.album.findMany({
-      where: { artistId, ...getContentWhere(userId, role) },
+      where: { artistId, ...getPrismaWhere(userId, role) },
       select: this.albumSelect,
     });
   }
@@ -80,12 +77,12 @@ export class ContentArtistService {
     role?: Role,
   ): Promise<IAlbum & IShortArtist & { songs: ISong[] }> {
     return await this.prisma.album.findFirstOrThrow({
-      where: { id: albumId, ...getContentWhere(userId, role) },
+      where: { id: albumId, ...getPrismaWhere(userId, role) },
       select: {
         ...this.albumSelect,
         artist: { select: { id: true, name: true } },
         songs: {
-          where: getContentWhere(userId, role),
+          where: getPrismaWhere(userId, role),
           select: this.songSelect,
         },
       },
@@ -98,7 +95,7 @@ export class ContentArtistService {
     role?: Role,
   ): Promise<ISong[]> {
     return await this.prisma.song.findMany({
-      where: { artistId, ...getContentWhere(userId, role) },
+      where: { artistId, ...getPrismaWhere(userId, role) },
       select: this.songSelect,
     });
   }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseUserService } from '@base/user.service';
-import { getContentWhere } from '@constants/content-where';
+import { getPrismaWhere } from '@constants/prisma-where';
 
 import type { ISong } from './song.interface';
 import type { ISuccess } from '@interfaces/response';
@@ -33,7 +33,7 @@ export class UserSongService extends BaseUserService {
       select: {
         songs: {
           ...this.songSelect,
-          where: { song: getContentWhere(userId, role) },
+          where: { song: getPrismaWhere(userId, role) },
         },
       },
     });

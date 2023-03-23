@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 
-import { getContentWhere } from '@constants/content-where';
+import { getPrismaWhere } from '@constants/prisma-where';
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
@@ -20,7 +20,7 @@ export class BaseUserService {
   ): Promise<void> {
     try {
       await this.prisma.song.findFirstOrThrow({
-        where: { id: songId, ...getContentWhere(userId, role) },
+        where: { id: songId, ...getPrismaWhere(userId, role) },
       });
     } catch {
       throw new ForbiddenException();
@@ -34,7 +34,7 @@ export class BaseUserService {
   ): Promise<void> {
     try {
       await this.prisma.album.findFirstOrThrow({
-        where: { id: albumId, ...getContentWhere(userId, role) },
+        where: { id: albumId, ...getPrismaWhere(userId, role) },
       });
     } catch {
       throw new ForbiddenException();
@@ -48,7 +48,7 @@ export class BaseUserService {
   ): Promise<void> {
     try {
       await this.prisma.artist.findFirstOrThrow({
-        where: { id: artistId, ...getContentWhere(userId, role) },
+        where: { id: artistId, ...getPrismaWhere(userId, role) },
       });
     } catch {
       throw new ForbiddenException();

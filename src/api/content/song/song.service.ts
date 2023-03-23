@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { getContentWhere } from '@constants/content-where';
+import { getPrismaWhere } from '@constants/prisma-where';
 import { PrismaService } from '@database/prisma.service';
 
 import type { ISong } from './song.interface';
@@ -29,7 +29,7 @@ export class ContentSongService {
 
   public async findAll(userId?: number, role?: Role): Promise<ISong[]> {
     return await this.prisma.song.findMany({
-      where: getContentWhere(userId, role),
+      where: getPrismaWhere(userId, role),
       select: this.songSelect,
     });
   }
@@ -40,7 +40,7 @@ export class ContentSongService {
     role?: Role,
   ): Promise<ISong> {
     return await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, ...getContentWhere(userId, role) },
+      where: { id: songId, ...getPrismaWhere(userId, role) },
       select: this.songSelect,
     });
   }

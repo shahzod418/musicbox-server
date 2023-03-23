@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
-import { getArtistContentWhere } from '@constants/content-where';
+import { getPrismaArtistWhere } from '@constants/prisma-where';
 import { PrismaService } from '@database/prisma.service';
 import { FileService } from '@services/file/file.service';
 
@@ -36,7 +36,7 @@ export class ContentAvatarService {
     role?: Role,
   ): Promise<Buffer> {
     const { avatar } = await this.prisma.artist.findFirstOrThrow({
-      where: { id: artistId, ...getArtistContentWhere(userId, role) },
+      where: { id: artistId, ...getPrismaArtistWhere(userId, role) },
       select: { avatar: true },
     });
 

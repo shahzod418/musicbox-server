@@ -2,10 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
 import { BaseContentService } from '@base/content.service';
-import {
-  getArtistContentWhere,
-  getContentWhere,
-} from '@constants/content-where';
+import { getPrismaArtistWhere, getPrismaWhere } from '@constants/prisma-where';
 
 import { FileType } from '@interfaces/file';
 
@@ -17,7 +14,7 @@ export class ContentCoverService extends BaseContentService {
     role?: Role,
   ): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.song.findFirstOrThrow({
-      where: { id: songId, ...getContentWhere(userId, role) },
+      where: { id: songId, ...getPrismaWhere(userId, role) },
       select: { artistId: true, cover: true },
     });
 
@@ -37,7 +34,7 @@ export class ContentCoverService extends BaseContentService {
     role?: Role,
   ): Promise<Buffer> {
     const { artistId, cover } = await this.prisma.album.findFirstOrThrow({
-      where: { id: albumId, ...getContentWhere(userId, role) },
+      where: { id: albumId, ...getPrismaWhere(userId, role) },
       select: { artistId: true, cover: true },
     });
 
@@ -57,7 +54,7 @@ export class ContentCoverService extends BaseContentService {
     role?: Role,
   ): Promise<Buffer> {
     const { cover } = await this.prisma.artist.findFirstOrThrow({
-      where: { id: artistId, ...getArtistContentWhere(userId, role) },
+      where: { id: artistId, ...getPrismaArtistWhere(userId, role) },
       select: { cover: true },
     });
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
 import { BaseUserService } from '@base/user.service';
-import { getContentWhere } from '@constants/content-where';
+import { getPrismaWhere } from '@constants/prisma-where';
 
 import { FileType } from '@interfaces/file';
 
@@ -93,7 +93,7 @@ export class UserPlaylistService extends BaseUserService {
         ...this.playlistSelect,
         songs: {
           ...this.songsSelect,
-          where: getContentWhere(userId, role),
+          where: getPrismaWhere(userId, role),
         },
       },
     });
@@ -128,7 +128,7 @@ export class UserPlaylistService extends BaseUserService {
         ...this.playlistSelect,
         songs: {
           ...this.songsSelect,
-          where: getContentWhere(userId, role),
+          where: getPrismaWhere(userId, role),
         },
       },
     });
